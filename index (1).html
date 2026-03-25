@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NexChat — Real-Time Messaging</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #07080f;
+      --surface: #0f1019;
+      --card: #141520;
+      --border: #1e2035;
+      --accent: #00e5ff;
+      --accent2: #7c3aed;
+      --accent3: #f59e0b;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --text: #e2e4f0;
+      --muted: #5a5e7a;
+      --radius: 14px;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'Outfit', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 55% 45% at 15% 5%, rgba(0,229,255,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 35% at 85% 95%, rgba(124,58,237,0.1) 0%, transparent 55%),
+        radial-gradient(ellipse 30% 25% at 50% 50%, rgba(245,158,11,0.03) 0%, transparent 60%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ─── SCREENS ─── */
+    .screen { display: none; width: 100%; position: relative; z-index: 1; animation: fadeUp 0.45s ease both; }
+    .screen.active { display: flex; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes msgIn  { from { opacity:0; transform:translateY(6px);  } to { opacity:1; transform:translateY(0); } }
+    @keyframes pulse  { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
+    @keyframes spin   { to { transform: rotate(360deg); } }
+
+    /* ─── AUTH SCREEN ─── */
+    #auth-screen { flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; gap: 32px; padding: 24px; }
+
+    .brand {
+      text-align: center;
+    }
+    .brand-logo {
+      font-family: var(--font-head);
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 60%, var(--accent2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .brand-sub { color: var(--muted); font-size: 0.9rem; margin-top: 6px; letter-spacing: 0.05em; }
+
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,229,255,0.04);
+    }
+
+    .auth-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 10px; padding: 4px; margin-bottom: 28px; }
+    .auth-tab {
+      flex: 1; text-align: center; padding: 9px; border-radius: 8px;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      color: var(--muted); font-family: var(--font-body);
+    }
+    .auth-tab.active { background: var(--accent2); color: #fff; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .form-group label { font-size: 0.78rem; color: var(--muted); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+    .form-group input {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 13px 15px;
+      color: var(--text); font-family: var(--font-body); font-size: 0.95rem;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,0.08); }
+    .form-group input::placeholder { color: var(--muted); }
+
+    .btn-primary {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent2), #4f46e5);
+      color: #fff; font-family: var(--font-head); font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+      margin-top: 4px;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,58,237,0.55); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .auth-error {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px; padding: 10px 14px;
+      color: #fca5a5; font-size: 0.85rem; margin-bottom: 14px; display: none;
+    }
+    .auth-error.show { display: block; }
+
+    /* ─── CHAT SCREEN ─── */
+    #chat-screen { flex-direction: row; height: 100dvh; width: 100%; max-width: 1100px; margin: 0 auto; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px; flex-shrink: 0;
+      background: var(--card); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .sidebar-logo { font-family: var(--font-head); font-weight: 800; font-size: 1.1rem; color: var(--accent); }
+
+    .sidebar-actions { display: flex; gap: 6px; }
+    .icon-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 0.85rem; transition: all 0.2s; color: var(--muted);
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .sidebar-section-label {
+      font-size: 0.7rem; color: var(--muted); font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 16px 20px 8px;
+    }
+
+    .contact-list { flex: 1; overflow-y: auto; padding: 0 10px 10px; }
+    .contact-list::-webkit-scrollbar { width: 3px; }
+    .contact-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .contact-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border-radius: 10px; cursor: pointer;
+      transition: background 0.15s; position: relative;
+    }
+    .contact-item:hover { background: var(--surface); }
+    .contact-item.active { background: rgba(0,229,255,0.07); }
+    .contact-item.active::before {
+      content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 60%; background: var(--accent); border-radius: 0 3px 3px 0;
+    }
+
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+      font-family: var(--font-head);
+    }
+
+    .contact-info { flex: 1; min-width: 0; }
+    .contact-name { font-size: 0.88rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .contact-preview { font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+    .unread-badge {
+      background: var(--accent); color: var(--bg);
+      font-size: 0.65rem; font-weight: 700;
+      border-radius: 10px; padding: 2px 7px; flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .current-user-name { flex: 1; font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .current-user-email { font-size: 0.72rem; color: var(--muted); }
+
+    .btn-logout-small {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 12px;
+      color: var(--muted); font-family: var(--font-body); font-size: 0.78rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-logout-small:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* Main Chat Area */
+    .chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--surface); }
+
+    .chat-topbar {
+      padding: 16px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--card); flex-shrink: 0;
+    }
+
+    .chat-topbar-left { display: flex; align-items: center; gap: 12px; }
+    .chat-topbar-name { font-family: var(--font-head); font-size: 1rem; font-weight: 700; }
+    .online-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; box-shadow: 0 0 6px var(--success); }
+    .chat-topbar-status { font-size: 0.75rem; color: var(--muted); }
+
+    .notification-banner {
+      background: rgba(0,229,255,0.08); border-bottom: 1px solid rgba(0,229,255,0.15);
+      padding: 8px 24px; font-size: 0.8rem; color: var(--accent);
+      display: none; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .notification-banner.show { display: flex; animation: fadeUp 0.3s ease; }
+
+    #messages-container {
+      flex: 1; overflow-y: auto; padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    #messages-container::-webkit-scrollbar { width: 4px; }
+    #messages-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .msg-row { display: flex; flex-direction: column; max-width: 65%; animation: msgIn 0.25s ease both; }
+    .msg-row.me { align-self: flex-end; align-items: flex-end; }
+    .msg-row.other { align-self: flex-start; align-items: flex-start; }
+
+    .msg-sender { font-size: 0.7rem; color: var(--muted); font-weight: 600; padding: 0 4px; margin-bottom: 3px; letter-spacing: 0.04em; }
+
+    .msg-bubble {
+      padding: 11px 16px; border-radius: 16px;
+      font-size: 0.9rem; line-height: 1.55; word-break: break-word;
+    }
+    .msg-row.me .msg-bubble {
+      background: linear-gradient(135deg, var(--accent2), #4f46e5);
+      color: #fff; border-bottom-right-radius: 4px;
+    }
+    .msg-row.other .msg-bubble {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); border-bottom-left-radius: 4px;
+    }
+
+    .msg-time { font-size: 0.67rem; color: var(--muted); padding: 0 4px; margin-top: 3px; }
+
+    .msg-system {
+      align-self: center; font-size: 0.73rem; color: var(--muted);
+      background: var(--card); border: 1px solid var(--border);
+      padding: 4px 14px; border-radius: 20px;
+    }
+
+    .empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 10px; opacity: 0.35;
+    }
+    .empty-state-icon { font-size: 2.5rem; }
+    .empty-state-text { font-size: 0.85rem; color: var(--muted); }
+
+    .chat-inputbar {
+      padding: 16px 24px; border-top: 1px solid var(--border);
+      display: flex; gap: 10px; background: var(--card); flex-shrink: 0;
+    }
+
+    #msg-input {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px;
+      color: var(--text); font-family: var(--font-body); font-size: 0.92rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    #msg-input:focus { border-color: var(--accent); }
+    #msg-input::placeholder { color: var(--muted); }
+    #msg-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-send {
+      background: linear-gradient(135deg, var(--accent2), #4f46e5);
+      border: none; border-radius: 10px; padding: 0 20px;
+      color: #fff; font-size: 1.1rem; cursor: pointer;
+      transition: all 0.2s; box-shadow: 0 4px 14px rgba(124,58,237,0.35);
+    }
+    .btn-send:hover { transform: scale(1.05); }
+    .btn-send:active { transform: scale(0.97); }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ─── ADMIN SCREEN ─── */
+    #admin-screen { flex-direction: column; min-height: 100dvh; width: 100%; max-width: 1100px; margin: 0 auto; }
+
+    .admin-topbar {
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 16px 28px; display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .admin-brand { font-family: var(--font-head); font-size: 1.1rem; font-weight: 800; }
+    .admin-brand span { color: var(--accent3); }
+
+    .admin-body { flex: 1; padding: 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px 24px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+    .stat-value { font-family: var(--font-head); font-size: 2rem; font-weight: 800; }
+    .stat-card.c1 .stat-value { color: var(--accent); }
+    .stat-card.c2 .stat-value { color: var(--accent2); }
+    .stat-card.c3 .stat-value { color: var(--accent3); }
+    .stat-card.c4 .stat-value { color: var(--success); }
+
+    .admin-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .admin-section-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .admin-section-title { font-family: var(--font-head); font-size: 0.95rem; font-weight: 700; }
+
+    .btn-small {
+      padding: 6px 14px; border-radius: 7px; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; font-family: var(--font-body); border: 1px solid; transition: all 0.2s;
+    }
+    .btn-danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+    .btn-danger:hover { background: rgba(239,68,68,0.2); }
+    .btn-success { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.4); color: #86efac; }
+    .btn-success:hover { background: rgba(34,197,94,0.2); }
+    .btn-accent { background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.3); color: var(--accent); }
+    .btn-accent:hover { background: rgba(0,229,255,0.18); }
+
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th {
+      padding: 10px 16px; text-align: left;
+      font-size: 0.72rem; color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--border);
+    }
+    .admin-table td {
+      padding: 12px 16px; font-size: 0.85rem;
+      border-bottom: 1px solid rgba(30,32,53,0.5);
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .status-pill {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 600;
+    }
+    .status-pill.online  { background: rgba(34,197,94,0.15);  color: #86efac; }
+    .status-pill.offline { background: rgba(90,94,122,0.2);   color: var(--muted); }
+    .status-pill.admin   { background: rgba(245,158,11,0.15); color: #fcd34d; }
+
+    .activity-log { max-height: 200px; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+    .activity-log::-webkit-scrollbar { width: 3px; }
+    .activity-log::-webkit-scrollbar-thumb { background: var(--border); }
+    .log-entry { display: flex; gap: 10px; font-size: 0.8rem; }
+    .log-time { color: var(--muted); flex-shrink: 0; font-family: 'Courier New', monospace; font-size: 0.72rem; }
+    .log-text { color: var(--text); }
+
+    .perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px; }
+    .perf-item { display: flex; flex-direction: column; gap: 6px; }
+    .perf-label { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+    .perf-bar-wrap { height: 6px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+    .perf-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .perf-val { font-size: 0.78rem; color: var(--text); font-weight: 600; }
+
+    /* No chat selected */
+    .no-chat-selected {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+      color: var(--muted); background: var(--surface);
+    }
+    .no-chat-icon { font-size: 3rem; opacity: 0.3; }
+    .no-chat-text { font-size: 0.9rem; opacity: 0.5; }
+
+    /* Loading spinner */
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    @media (max-width: 640px) {
+      .sidebar { width: 100%; position: fixed; bottom: 0; left: 0; right: 0; height: 60px; flex-direction: row; border-right: none; border-top: 1px solid var(--border); z-index: 10; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════════ -->
+<div id="auth-screen" class="screen active">
+  <div class="brand">
+    <div class="brand-logo">NexChat</div>
+    <div class="brand-sub">Instant · Secure · Real-Time</div>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
+      <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Register</div>
+    </div>
+
+    <div id="auth-error" class="auth-error"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <button class="btn-primary" id="btn-login" onclick="doLogin()">Sign In</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="register-form" style="display:none">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="reg-name" placeholder="Your name" autocomplete="name"/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password"/>
+      </div>
+      <button class="btn-primary" id="btn-register" onclick="doRegister()">Create Account</button>
+    </div>
+
+    <p style="text-align:center; font-size:0.75rem; color:var(--muted); margin-top:18px;">
+      Admin? Use <strong style="color:var(--accent3)">admin@nexchat.com</strong> / <strong style="color:var(--accent3)">admin123</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CHAT SCREEN
+══════════════════════════════════════ -->
+<div id="chat-screen" class="screen">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-logo">NexChat</span>
+      <div class="sidebar-actions">
+        <div class="icon-btn" title="Refresh contacts" onclick="loadContacts()">↻</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">Contacts</div>
+    <div class="contact-list" id="contact-list">
+      <!-- populated dynamically -->
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="avatar" id="me-avatar" style="background:var(--accent2); color:#fff"></div>
+      <div style="flex:1;min-width:0">
+        <div class="current-user-name" id="me-name"></div>
+        <div class="current-user-email" id="me-email"></div>
+      </div>
+      <button class="btn-logout-small" onclick="doLogout()">Out</button>
+    </div>
+  </div>
+
+  <!-- Chat area -->
+  <div class="chat-area" id="chat-area">
+    <div class="no-chat-selected" id="no-chat">
+      <div class="no-chat-icon">💬</div>
+      <div class="no-chat-text">Select a contact to start chatting</div>
+    </div>
+
+    <div id="active-chat" style="display:none; flex-direction:column; flex:1; min-height:0;">
+      <div class="chat-topbar">
+        <div class="chat-topbar-left">
+          <div class="avatar" id="chat-avatar" style="width:34px;height:34px;font-size:0.8rem;"></div>
+          <div>
+            <div class="chat-topbar-name" id="chat-name"></div>
+            <div class="chat-topbar-status">Online</div>
+          </div>
+          <div class="online-dot" style="margin-left:6px;"></div>
+        </div>
+      </div>
+
+      <div class="notification-banner" id="notif-banner">
+        <span>🔔</span>
+        <span id="notif-text"></span>
+      </div>
+
+      <div id="messages-container"></div>
+
+      <div class="chat-inputbar">
+        <input type="text" id="msg-input" placeholder="Type a message…" maxlength="500" autocomplete="off"/>
+        <button class="btn-send" id="btn-send" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     ADMIN SCREEN
+══════════════════════════════════════ -->
+<div id="admin-screen" class="screen">
+  <div class="admin-topbar">
+    <div class="admin-brand">NexChat <span>Admin</span></div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span style="font-size:0.8rem;color:var(--muted)" id="admin-email-label"></span>
+      <button class="btn-small btn-danger" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card c1"><div class="stat-label">Total Users</div><div class="stat-value" id="stat-users">—</div></div>
+      <div class="stat-card c2"><div class="stat-label">Total Messages</div><div class="stat-value" id="stat-msgs">—</div></div>
+      <div class="stat-card c3"><div class="stat-label">Active Sessions</div><div class="stat-value" id="stat-sessions">—</div></div>
+      <div class="stat-card c4"><div class="stat-label">System Status</div><div class="stat-value" style="font-size:1.1rem;margin-top:4px;">✅ Online</div></div>
+    </div>
+
+    <!-- User Management -->
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">👥 User Management</div>
+        <button class="btn-small btn-accent" onclick="loadAdminData()">↻ Refresh</button>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="admin-user-table">
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">📋 Activity Log</div>
+      </div>
+      <div class="activity-log" id="activity-log"></div>
+    </div>
+
+    <!-- System Monitoring -->
+    <div class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">📊 System Monitoring</div>
+        <button class="btn-small btn-accent" onclick="updatePerf()">↻ Refresh</button>
+      </div>
+      <div class="perf-grid">
+        <div class="perf-item">
+          <div class="perf-label">Server Uptime</div>
+          <div class="perf-bar-wrap"><div class="perf-bar" id="bar-uptime" style="background:var(--success);width:99%"></div></div>
+          <div class="perf-val" id="val-uptime">99.9%</div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-label">Message Throughput</div>
+          <div class="perf-bar-wrap"><div class="perf-bar" id="bar-throughput" style="background:var(--accent);width:72%"></div></div>
+          <div class="perf-val" id="val-throughput">72%</div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-label">Database Load</div>
+          <div class="perf-bar-wrap"><div class="perf-bar" id="bar-db" style="background:var(--accent3);width:45%"></div></div>
+          <div class="perf-val" id="val-db">45%</div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-label">Memory Usage</div>
+          <div class="perf-bar-wrap"><div class="perf-bar" id="bar-mem" style="background:var(--accent2);width:61%"></div></div>
+          <div class="perf-val" id="val-mem">61%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     FIREBASE + APP LOGIC
+══════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword,
+         signInWithEmailAndPassword, signOut,
+         onAuthStateChanged, updateProfile }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc,
+         getDoc, getDocs, addDoc, updateDoc,
+         deleteDoc, onSnapshot, query,
+         orderBy, serverTimestamp, where,
+         limit }                                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ───────────────────────────────────────────────
+// 🔴 PASTE YOUR FIREBASE CONFIG HERE
+// ───────────────────────────────────────────────
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAEUDONHnF6TqYlGYKhtnHq8fWbLl9AgAo",
+  authDomain: "swiftpigeon-c7bba.firebaseapp.com",
+  projectId: "swiftpigeon-c7bba",
+  storageBucket: "swiftpigeon-c7bba.firebasestorage.app",
+  messagingSenderId: "461317929891",
+  appId: "1:461317929891:web:9f0a07b68813ba24893816",
+  measurementId: "G-MRGF95HV5L"
+};
+// ───────────────────────────────────────────────
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const ADMIN_EMAIL = "admin@nexchat.com";
+
+let currentUser    = null;
+let selectedContact = null;
+let msgUnsubscribe = null;
+let activityLogs   = [];
+
+// ── Helpers ──────────────────────────────────────────────
+function avatarColor(name = '') {
+  const colors = ['#7c3aed','#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#14b8a6'];
+  let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
+  return colors[Math.abs(h) % colors.length];
+}
+function initials(name = '') { return name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2) || '?'; }
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display='none'; });
+  const el = document.getElementById(id);
+  el.style.display = 'flex'; el.classList.add('active');
+}
+function log(text) {
+  const now = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  activityLogs.unshift({ time: now, text });
+  if (activityLogs.length > 50) activityLogs.pop();
+  renderActivityLog();
+}
+function renderActivityLog() {
+  const el = document.getElementById('activity-log');
+  if (!el) return;
+  el.innerHTML = activityLogs.map(l =>
+    `<div class="log-entry"><span class="log-time">${l.time}</span><span class="log-text">${esc(l.text)}</span></div>`
+  ).join('') || '<div style="color:var(--muted);font-size:0.8rem;padding:4px">No activity yet.</div>';
+}
+
+// ── Tab switching ──────────────────────────────────────────
+window.switchTab = function(tab) {
+  document.getElementById('login-form').style.display    = tab==='login'    ? 'block' : 'none';
+  document.getElementById('register-form').style.display = tab==='register' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active',    tab==='login');
+  document.getElementById('tab-register').classList.toggle('active', tab==='register');
+  document.getElementById('auth-error').classList.remove('show');
+};
+
+function showError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.classList.add('show');
+}
+
+// ── Register ───────────────────────────────────────────────
+window.doRegister = async function() {
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass  = document.getElementById('reg-password').value;
+  if (!name || !email || !pass) return showError('Please fill in all fields.');
+  if (pass.length < 6) return showError('Password must be at least 6 characters.');
+
+  const btn = document.getElementById('btn-register');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creating…';
+
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(cred.user, { displayName: name });
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      name, email, role: 'user',
+      createdAt: serverTimestamp(), online: true
+    });
+    log(`New user registered: ${name} (${email})`);
+  } catch(e) {
+    showError(e.message.replace('Firebase: ',''));
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+};
+
+// ── Login ──────────────────────────────────────────────────
+window.doLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  if (!email || !pass) return showError('Please enter email and password.');
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Signing in…';
+
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    log(`User signed in: ${email}`);
+  } catch(e) {
+    showError('Invalid email or password.');
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+};
+
+// ── Logout ─────────────────────────────────────────────────
+window.doLogout = async function() {
+  if (currentUser) {
+    try { await updateDoc(doc(db,'users',currentUser.uid),{ online: false }); } catch(_) {}
+    log(`User logged out: ${currentUser.email}`);
+  }
+  if (msgUnsubscribe) { msgUnsubscribe(); msgUnsubscribe = null; }
+  await signOut(auth);
+};
+
+// ── Auth state ─────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    currentUser = null; selectedContact = null;
+    document.getElementById('btn-login').disabled = false;
+    document.getElementById('btn-login').textContent = 'Sign In';
+    document.getElementById('btn-register').disabled = false;
+    document.getElementById('btn-register').textContent = 'Create Account';
+    showScreen('auth-screen'); return;
+  }
+
+  currentUser = user;
+  try { await updateDoc(doc(db,'users',user.uid),{ online: true }); } catch(_) {}
+
+  if (user.email === ADMIN_EMAIL) {
+    showScreen('admin-screen');
+    document.getElementById('admin-email-label').textContent = user.email;
+    loadAdminData();
+    updatePerf();
+    setInterval(updatePerf, 15000);
+  } else {
+    showScreen('chat-screen');
+    setupChatUI();
+  }
+});
+
+// ── Chat UI setup ──────────────────────────────────────────
+async function setupChatUI() {
+  const name  = currentUser.displayName || currentUser.email;
+  const color = avatarColor(name);
+  document.getElementById('me-name').textContent  = name;
+  document.getElementById('me-email').textContent = currentUser.email;
+  const av = document.getElementById('me-avatar');
+  av.textContent = initials(name); av.style.background = color;
+  loadContacts();
+}
+
+window.loadContacts = async function() {
+  const list = document.getElementById('contact-list');
+  list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:0.82rem">Loading…</div>';
+  const snap = await getDocs(collection(db,'users'));
+  list.innerHTML = '';
+  snap.forEach(d => {
+    if (d.id === currentUser.uid) return;
+    const u = d.data();
+    const color = avatarColor(u.name);
+    const div = document.createElement('div');
+    div.className = 'contact-item';
+    div.dataset.uid = d.id;
+    div.dataset.name = u.name;
+    div.dataset.color = color;
+    div.innerHTML = `
+      <div class="avatar" style="background:${color};color:#fff">${initials(u.name)}</div>
+      <div class="contact-info">
+        <div class="contact-name">${esc(u.name)}</div>
+        <div class="contact-preview">${u.online ? '🟢 Online' : '⚪ Offline'}</div>
+      </div>`;
+    div.onclick = () => openChat(d.id, u.name, color);
+    list.appendChild(div);
+  });
+  if (!list.children.length)
+    list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:0.82rem">No other users yet.</div>';
+};
+
+function chatId(a, b) { return [a,b].sort().join('_'); }
+
+function openChat(uid, name, color) {
+  selectedContact = { uid, name, color };
+  document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.contact-item[data-uid="${uid}"]`)?.classList.add('active');
+
+  document.getElementById('no-chat').style.display = 'none';
+  const ac = document.getElementById('active-chat');
+  ac.style.display = 'flex';
+
+  const av = document.getElementById('chat-avatar');
+  av.textContent = initials(name); av.style.background = color; av.style.color = '#fff';
+  document.getElementById('chat-name').textContent = name;
+
+  document.getElementById('messages-container').innerHTML = '';
+  document.getElementById('msg-input').disabled = false;
+  document.getElementById('btn-send').disabled = false;
+
+  if (msgUnsubscribe) msgUnsubscribe();
+  const cid = chatId(currentUser.uid, uid);
+  const q = query(collection(db,'chats',cid,'messages'), orderBy('timestamp','asc'), limit(100));
+
+  msgUnsubscribe = onSnapshot(q, snap => {
+    const container = document.getElementById('messages-container');
+    const wasAtBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 60;
+    const prevCount = container.querySelectorAll('.msg-row,.msg-system').length;
+
+    container.innerHTML = '';
+    snap.forEach(d => {
+      const m = d.data();
+      if (m.type === 'system') {
+        const el = document.createElement('div');
+        el.className = 'msg-system'; el.textContent = m.text;
+        container.appendChild(el);
+      } else {
+        const isMe = m.sender === currentUser.uid;
+        const row = document.createElement('div');
+        row.className = `msg-row ${isMe ? 'me' : 'other'}`;
+        row.innerHTML = `
+          ${!isMe ? `<div class="msg-sender">${esc(name)}</div>` : ''}
+          <div class="msg-bubble">${esc(m.text)}</div>
+          <div class="msg-time">${fmtTime(m.timestamp)}</div>`;
+        container.appendChild(row);
+      }
+    });
+
+    if (!container.children.length) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">👋</div><div class="empty-state-text">Say hello to ${esc(name)}!</div></div>`;
+    }
+
+    const newCount = container.querySelectorAll('.msg-row,.msg-system').length;
+    if (wasAtBottom || newCount === prevCount) container.scrollTop = container.scrollHeight;
+
+    // notification if new message from other
+    if (newCount > prevCount && prevCount > 0) {
+      const last = snap.docs[snap.docs.length-1]?.data();
+      if (last && last.sender !== currentUser.uid) showNotif(`New message from ${name}`);
+    }
+  });
+}
+
+function showNotif(text) {
+  const b = document.getElementById('notif-banner');
+  document.getElementById('notif-text').textContent = text;
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 3000);
+}
+
+window.sendMessage = async function() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text || !selectedContact) return;
+  input.value = '';
+
+  const cid = chatId(currentUser.uid, selectedContact.uid);
+  await setDoc(doc(db,'chats',cid), { participants: [currentUser.uid, selectedContact.uid] }, { merge: true });
+  await addDoc(collection(db,'chats',cid,'messages'), {
+    text, sender: currentUser.uid,
+    timestamp: serverTimestamp(), type: 'chat'
+  });
+  // also update global message count for admin
+  await addDoc(collection(db,'messages'), {
+    sender: currentUser.uid, recipient: selectedContact.uid,
+    text, timestamp: serverTimestamp()
+  });
+};
+
+document.getElementById('msg-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendMessage(); }
+});
+
+// ── Admin ──────────────────────────────────────────────────
+window.loadAdminData = async function() {
+  const tbody = document.getElementById('admin-user-table');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Loading…</td></tr>';
+
+  const [userSnap, msgSnap] = await Promise.all([
+    getDocs(collection(db,'users')),
+    getDocs(collection(db,'messages'))
+  ]);
+
+  document.getElementById('stat-users').textContent = userSnap.size;
+  document.getElementById('stat-msgs').textContent  = msgSnap.size;
+  document.getElementById('stat-sessions').textContent = [...userSnap.docs].filter(d=>d.data().online).length;
+
+  tbody.innerHTML = '';
+  userSnap.forEach(d => {
+    const u = d.data(); const uid = d.id;
+    const color = avatarColor(u.name);
+    const joined = u.createdAt ? u.createdAt.toDate().toLocaleDateString() : '—';
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
+        <div class="avatar" style="background:${color};color:#fff;width:30px;height:30px;font-size:0.72rem;">${initials(u.name)}</div>
+        <span>${esc(u.name)}</span>
+      </td>
+      <td style="color:var(--muted)">${esc(u.email)}</td>
+      <td><span class="status-pill ${u.role==='admin'?'admin':'offline'}">${u.role||'user'}</span></td>
+      <td><span class="status-pill ${u.online?'online':'offline'}">${u.online?'Online':'Offline'}</span></td>
+      <td style="color:var(--muted)">${joined}</td>
+      <td>
+        ${uid !== currentUser?.uid
+          ? `<button class="btn-small btn-danger" onclick="window.deleteUser('${uid}','${esc(u.name)}')">Delete</button>`
+          : `<span style="color:var(--muted);font-size:0.75rem">You</span>`
+        }
+      </td>`;
+    tbody.appendChild(row);
+  });
+
+  if (!tbody.children.length)
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No users found.</td></tr>';
+};
+
+window.deleteUser = async function(uid, name) {
+  if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
+  await deleteDoc(doc(db,'users', uid));
+  log(`Admin deleted user: ${name}`);
+  loadAdminData();
+};
+
+window.updatePerf = function() {
+  const metrics = [
+    { bar:'bar-uptime',     val:'val-uptime',     min:97, max:100, suffix:'%', color:'var(--success)' },
+    { bar:'bar-throughput', val:'val-throughput',  min:50, max:95,  suffix:'%', color:'var(--accent)' },
+    { bar:'bar-db',         val:'val-db',          min:30, max:70,  suffix:'%', color:'var(--accent3)' },
+    { bar:'bar-mem',        val:'val-mem',         min:40, max:75,  suffix:'%', color:'var(--accent2)' },
+  ];
+  metrics.forEach(m => {
+    const v = Math.round(m.min + Math.random() * (m.max - m.min));
+    const bar = document.getElementById(m.bar);
+    const val = document.getElementById(m.val);
+    if (bar) { bar.style.width = v+'%'; bar.style.background = m.color; }
+    if (val) val.textContent = v + m.suffix;
+  });
+  log('System performance metrics refreshed');
+};
+
+// preload some activity
+log('NexChat Admin Panel initialized');
+log('Firebase connection established');
+log('Firestore real-time listener active');
+
+</script>
+</body>
+</html>
