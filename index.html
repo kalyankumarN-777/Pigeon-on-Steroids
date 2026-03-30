@@ -119,6 +119,49 @@
     }
     .auth-error.show { display: block; }
 
+    /* ─── PENDING SCREEN ─── */
+    #pending-screen { flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; gap: 28px; padding: 24px; }
+
+    .pending-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 24px; padding: 44px 40px;
+      width: 100%; max-width: 420px; text-align: center;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column; align-items: center; gap: 18px;
+    }
+
+    .pending-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(245,158,11,0.12); border: 2px solid rgba(245,158,11,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; animation: pendingPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pendingPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.3); }
+      50%      { box-shadow: 0 0 0 14px rgba(245,158,11,0); }
+    }
+
+    .pending-title { font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; color: var(--text); }
+    .pending-desc  { color: var(--muted); font-size: 0.88rem; line-height: 1.6; max-width: 300px; }
+
+    .pending-badge {
+      background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
+      color: #fcd34d; border-radius: 20px; padding: 6px 18px;
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em;
+    }
+
+    .pending-dots { display: flex; gap: 6px; align-items: center; }
+    .pending-dots span {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--accent3);
+      animation: dotBounce 1.4s ease-in-out infinite;
+    }
+    .pending-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .pending-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce {
+      0%,80%,100% { transform: scale(0.6); opacity:0.4; }
+      40%          { transform: scale(1);   opacity:1;   }
+    }
+
     /* ─── CHAT SCREEN ─── */
     #chat-screen { flex-direction: row; height: 100dvh; width: 100%; max-width: 1100px; margin: 0 auto; }
 
@@ -452,6 +495,29 @@
 </div>
 
 <!-- ══════════════════════════════════════
+     PENDING APPROVAL SCREEN
+══════════════════════════════════════ -->
+<div id="pending-screen" class="screen">
+  <div class="brand">
+    <div class="brand-logo">NexChat</div>
+  </div>
+  <div class="pending-card">
+    <div class="pending-icon">⏳</div>
+    <div class="pending-title">Awaiting Approval</div>
+    <div class="pending-badge">PENDING REVIEW</div>
+    <div class="pending-desc">
+      Your account has been registered successfully.<br/>
+      An admin needs to approve your account before you can start chatting. Please check back soon!
+    </div>
+    <div class="pending-dots">
+      <span></span><span></span><span></span>
+    </div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-top:4px">Checking status automatically…</div>
+    <button class="btn-logout-small" style="margin-top:8px" onclick="doLogout()">Sign out</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
      CHAT SCREEN
 ══════════════════════════════════════ -->
 <div id="chat-screen" class="screen">
@@ -546,13 +612,14 @@
             <th>User</th>
             <th>Email</th>
             <th>Role</th>
-            <th>Status</th>
+            <th>Approval</th>
+            <th>Online</th>
             <th>Joined</th>
-            <th>Action</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="admin-user-table">
-          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">Loading…</td></tr>
+          <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -614,7 +681,6 @@ import { getFirestore, collection, doc, setDoc,
 // ───────────────────────────────────────────────
 // 🔴 PASTE YOUR FIREBASE CONFIG HERE
 // ───────────────────────────────────────────────
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAEUDONHnF6TqYlGYKhtnHq8fWbLl9AgAo",
   authDomain: "swiftpigeon-c7bba.firebaseapp.com",
@@ -630,7 +696,7 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-const ADMIN_EMAIL = "admin@nexchat.com";
+const ADMIN_EMAIL = "admin@SP.com";
 
 let currentUser    = null;
 let selectedContact = null;
@@ -699,9 +765,10 @@ window.doRegister = async function() {
     await updateProfile(cred.user, { displayName: name });
     await setDoc(doc(db, 'users', cred.user.uid), {
       name, email, role: 'user',
-      createdAt: serverTimestamp(), online: true
+      status: 'pending',          // 🔑 NEW: starts as pending
+      createdAt: serverTimestamp(), online: false
     });
-    log(`New user registered: ${name} (${email})`);
+    log(`New user registered (pending): ${name} (${email})`);
   } catch(e) {
     showError(e.message.replace('Firebase: ',''));
     btn.disabled = false; btn.textContent = 'Create Account';
@@ -732,14 +799,18 @@ window.doLogout = async function() {
     try { await updateDoc(doc(db,'users',currentUser.uid),{ online: false }); } catch(_) {}
     log(`User logged out: ${currentUser.email}`);
   }
-  if (msgUnsubscribe) { msgUnsubscribe(); msgUnsubscribe = null; }
+  if (msgUnsubscribe)      { msgUnsubscribe();      msgUnsubscribe = null; }
+  if (approvalUnsubscribe) { approvalUnsubscribe(); approvalUnsubscribe = null; }
   await signOut(auth);
 };
 
 // ── Auth state ─────────────────────────────────────────────
+let approvalUnsubscribe = null;
+
 onAuthStateChanged(auth, async user => {
   if (!user) {
     currentUser = null; selectedContact = null;
+    if (approvalUnsubscribe) { approvalUnsubscribe(); approvalUnsubscribe = null; }
     document.getElementById('btn-login').disabled = false;
     document.getElementById('btn-login').textContent = 'Sign In';
     document.getElementById('btn-register').disabled = false;
@@ -748,18 +819,37 @@ onAuthStateChanged(auth, async user => {
   }
 
   currentUser = user;
-  try { await updateDoc(doc(db,'users',user.uid),{ online: true }); } catch(_) {}
 
+  // Admin bypasses approval check
   if (user.email === ADMIN_EMAIL) {
     showScreen('admin-screen');
     document.getElementById('admin-email-label').textContent = user.email;
     loadAdminData();
     updatePerf();
     setInterval(updatePerf, 15000);
-  } else {
-    showScreen('chat-screen');
-    setupChatUI();
+    return;
   }
+
+  // For regular users — listen to their doc in real-time for approval changes
+  approvalUnsubscribe && approvalUnsubscribe();
+  approvalUnsubscribe = onSnapshot(doc(db, 'users', user.uid), async (snap) => {
+    if (!snap.exists()) return;
+    const data = snap.data();
+
+    if (data.status === 'approved') {
+      // Approved — go to chat
+      await updateDoc(doc(db,'users',user.uid),{ online: true });
+      showScreen('chat-screen');
+      setupChatUI();
+    } else if (data.status === 'rejected') {
+      // Rejected — show message and sign out
+      alert('❌ Your account has been rejected by the admin. Please contact support.');
+      doLogout();
+    } else {
+      // Pending — show waiting screen
+      showScreen('pending-screen');
+    }
+  });
 });
 
 // ── Chat UI setup ──────────────────────────────────────────
@@ -781,6 +871,7 @@ window.loadContacts = async function() {
   snap.forEach(d => {
     if (d.id === currentUser.uid) return;
     const u = d.data();
+    if (u.status !== 'approved') return;   // only show approved users
     const color = avatarColor(u.name);
     const div = document.createElement('div');
     div.className = 'contact-item';
@@ -797,7 +888,7 @@ window.loadContacts = async function() {
     list.appendChild(div);
   });
   if (!list.children.length)
-    list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:0.82rem">No other users yet.</div>';
+    list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:0.82rem">No approved contacts yet.</div>';
 };
 
 function chatId(a, b) { return [a,b].sort().join('_'); }
@@ -895,22 +986,60 @@ document.getElementById('msg-input').addEventListener('keydown', e => {
 // ── Admin ──────────────────────────────────────────────────
 window.loadAdminData = async function() {
   const tbody = document.getElementById('admin-user-table');
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Loading…</td></tr>';
 
   const [userSnap, msgSnap] = await Promise.all([
     getDocs(collection(db,'users')),
     getDocs(collection(db,'messages'))
   ]);
 
-  document.getElementById('stat-users').textContent = userSnap.size;
-  document.getElementById('stat-msgs').textContent  = msgSnap.size;
-  document.getElementById('stat-sessions').textContent = [...userSnap.docs].filter(d=>d.data().online).length;
+  const users = userSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const pendingCount  = users.filter(u => u.status === 'pending').length;
+  const approvedCount = users.filter(u => u.status === 'approved').length;
+
+  document.getElementById('stat-users').textContent    = userSnap.size;
+  document.getElementById('stat-msgs').textContent     = msgSnap.size;
+  document.getElementById('stat-sessions').textContent = users.filter(u=>u.online).length;
+
+  // Show pending alert badge on stat card if any pending
+  const pendingBadgeEl = document.getElementById('pending-count-badge');
+  if (pendingBadgeEl) pendingBadgeEl.textContent = pendingCount > 0 ? ` (${pendingCount} pending)` : '';
 
   tbody.innerHTML = '';
-  userSnap.forEach(d => {
-    const u = d.data(); const uid = d.id;
-    const color = avatarColor(u.name);
-    const joined = u.createdAt ? u.createdAt.toDate().toLocaleDateString() : '—';
+
+  // Sort: pending first, then approved, then rejected
+  users.sort((a,b) => {
+    const order = { pending: 0, approved: 1, rejected: 2 };
+    return (order[a.status]??1) - (order[b.status]??1);
+  });
+
+  users.forEach(u => {
+    const uid = u.id;
+    const color   = avatarColor(u.name);
+    const joined  = u.createdAt ? u.createdAt.toDate().toLocaleDateString() : '—';
+    const status  = u.status || 'pending';
+
+    const approvalPill = status === 'approved'
+      ? `<span class="status-pill online">✅ Approved</span>`
+      : status === 'rejected'
+      ? `<span class="status-pill" style="background:rgba(239,68,68,0.15);color:#fca5a5">❌ Rejected</span>`
+      : `<span class="status-pill" style="background:rgba(245,158,11,0.15);color:#fcd34d">⏳ Pending</span>`;
+
+    const isAdmin = uid === currentUser?.uid;
+    const actionBtns = isAdmin
+      ? `<span style="color:var(--muted);font-size:0.75rem">You (Admin)</span>`
+      : `<div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${status !== 'approved'
+            ? `<button class="btn-small btn-success" onclick="window.approveUser('${uid}','${esc(u.name)}')">✅ Approve</button>`
+            : `<button class="btn-small" style="border-color:var(--border);color:var(--muted);cursor:default" disabled>Approved</button>`
+          }
+          ${status !== 'rejected'
+            ? `<button class="btn-small btn-danger" onclick="window.rejectUser('${uid}','${esc(u.name)}')">❌ Reject</button>`
+            : ''
+          }
+          <button class="btn-small btn-danger" onclick="window.deleteUser('${uid}','${esc(u.name)}')" style="opacity:0.7">🗑</button>
+        </div>`;
+
     const row = document.createElement('tr');
     row.innerHTML = `
       <td style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
@@ -919,25 +1048,34 @@ window.loadAdminData = async function() {
       </td>
       <td style="color:var(--muted)">${esc(u.email)}</td>
       <td><span class="status-pill ${u.role==='admin'?'admin':'offline'}">${u.role||'user'}</span></td>
+      <td>${approvalPill}</td>
       <td><span class="status-pill ${u.online?'online':'offline'}">${u.online?'Online':'Offline'}</span></td>
       <td style="color:var(--muted)">${joined}</td>
-      <td>
-        ${uid !== currentUser?.uid
-          ? `<button class="btn-small btn-danger" onclick="window.deleteUser('${uid}','${esc(u.name)}')">Delete</button>`
-          : `<span style="color:var(--muted);font-size:0.75rem">You</span>`
-        }
-      </td>`;
+      <td>${actionBtns}</td>`;
     tbody.appendChild(row);
   });
 
   if (!tbody.children.length)
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No users found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No users found.</td></tr>';
 };
 
 window.deleteUser = async function(uid, name) {
   if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
   await deleteDoc(doc(db,'users', uid));
   log(`Admin deleted user: ${name}`);
+  loadAdminData();
+};
+
+window.approveUser = async function(uid, name) {
+  await updateDoc(doc(db,'users', uid), { status: 'approved' });
+  log(`Admin approved user: ${name}`);
+  loadAdminData();
+};
+
+window.rejectUser = async function(uid, name) {
+  if (!confirm(`Reject "${name}"? They will be signed out and blocked.`)) return;
+  await updateDoc(doc(db,'users', uid), { status: 'rejected', online: false });
+  log(`Admin rejected user: ${name}`);
   loadAdminData();
 };
 
