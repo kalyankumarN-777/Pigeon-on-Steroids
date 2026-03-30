@@ -162,7 +162,7 @@
       40%          { transform: scale(1);   opacity:1;   }
     }
 
-    /* ── CHAT SCREEN ── */
+    /* ─── CHAT SCREEN ─── */
     #chat-screen { flex-direction: row; height: 100dvh; width: 100%; max-width: 1100px; margin: 0 auto; }
 
     /* Sidebar */
@@ -709,7 +709,7 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-const ADMIN_EMAIL = "admin@sp.com";
+const ADMIN_EMAIL = "admin@SP.com";
 
 let currentUser    = null;
 let selectedContact = null;
@@ -833,35 +833,39 @@ onAuthStateChanged(auth, async user => {
 
   currentUser = user;
 
-  // Admin bypasses approval check
-  if (user.email === ADMIN_EMAIL) {
+  // ✅ GET USER ROLE FROM FIRESTORE FIRST
+  const userSnap = await getDoc(doc(db, 'users', user.uid));
+  if (!userSnap.exists()) {
+    showScreen('auth-screen');
+    return;
+  }
+  const userData = userSnap.data();
+
+  // ✅ ADMIN ALWAYS GOES TO ADMIN SCREEN (checked by role field, not email)
+  if (userData.role === 'admin') {
     showScreen('admin-screen');
     document.getElementById('admin-email-label').textContent = user.email;
     loadAdminData();
     updatePerf();
     setInterval(updatePerf, 15000);
-    // 🔑 real-time listener — auto-refreshes admin panel when any user doc changes
+    // real-time listener — auto-refreshes admin panel when any user doc changes
     onSnapshot(collection(db, 'users'), () => loadAdminData());
     return;
   }
 
-  // For regular users — listen to their doc in real-time for approval changes
+  // ✅ REGULAR USERS: REAL-TIME APPROVAL CHECK
   approvalUnsubscribe && approvalUnsubscribe();
   approvalUnsubscribe = onSnapshot(doc(db, 'users', user.uid), async (snap) => {
     if (!snap.exists()) return;
     const data = snap.data();
-
     if (data.status === 'approved') {
-      // Approved — go to chat
-      await updateDoc(doc(db,'users',user.uid),{ online: true });
+      await updateDoc(doc(db, 'users', user.uid), { online: true });
       showScreen('chat-screen');
       setupChatUI();
     } else if (data.status === 'rejected') {
-      // Rejected — show message and sign out
-      alert('❌ Your account has been rejected by the admin. Please contact support.');
+      alert('❌ Your account has been rejected by the admin.');
       doLogout();
     } else {
-      // Pending — show waiting screen
       showScreen('pending-screen');
     }
   });
@@ -887,7 +891,7 @@ window.loadContacts = async function() {
     if (d.id === currentUser.uid) return;
     const u = d.data();
     if (u.status !== 'approved') return;   // only approved users
-    if (u.role === 'admin' || u.email === ADMIN_EMAIL) return; // 🔑 hide admin
+    if (u.role === 'admin') return; // hide admin from contacts
     const color = avatarColor(u.name);
     const div = document.createElement('div');
     div.className = 'contact-item';
@@ -1010,10 +1014,10 @@ window.loadAdminData = async function() {
   ]);
 
   const users = userSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const pendingUsers  = users.filter(u => u.status === 'pending' && u.email !== ADMIN_EMAIL);
-  const approvedUsers = users.filter(u => u.status === 'approved');
+  const pendingUsers  = users.filter(u => u.status === 'pending' && u.role !== 'admin');
+  const approvedUsers = users.filter(u => u.status === 'approved' && u.role !== 'admin');
 
-  document.getElementById('stat-users').textContent    = users.filter(u => u.email !== ADMIN_EMAIL).length;
+  document.getElementById('stat-users').textContent    = users.filter(u => u.role !== 'admin').length;
   document.getElementById('stat-msgs').textContent     = msgSnap.size;
   document.getElementById('stat-sessions').textContent = users.filter(u=>u.online).length;
   document.getElementById('stat-pending').textContent  = pendingUsers.length;
@@ -1076,9 +1080,9 @@ window.loadAdminData = async function() {
   // ── User Management table ────────────────────────────────
   tbody.innerHTML = '';
 
-  // Sort: pending first, then approved, then rejected — skip admin itself
+  // Sort: pending first, then approved, then rejected — skip admin
   users
-    .filter(u => u.email !== ADMIN_EMAIL)
+    .filter(u => u.role !== 'admin')
     .sort((a,b) => {
       const order = { pending: 0, approved: 1, rejected: 2 };
       return (order[a.status]??1) - (order[b.status]??1);
