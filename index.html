@@ -812,8 +812,10 @@ window.doLogout = async function() {
     try { await updateDoc(doc(db,'users',currentUser.uid),{ online: false }); } catch(_) {}
     log(`User logged out: ${currentUser.email}`);
   }
+  onlineStatusSet = false;
   if (msgUnsubscribe)      { msgUnsubscribe();      msgUnsubscribe = null; }
   if (approvalUnsubscribe) { approvalUnsubscribe(); approvalUnsubscribe = null; }
+  if (contactsUnsubscribe) { contactsUnsubscribe(); contactsUnsubscribe = null; }
   await signOut(auth);
 };
 
@@ -859,7 +861,6 @@ onAuthStateChanged(auth, async user => {
     if (!snap.exists()) return;
     const data = snap.data();
     if (data.status === 'approved') {
-      await updateDoc(doc(db, 'users', user.uid), { online: true });
       showScreen('chat-screen');
       setupChatUI();
     } else if (data.status === 'rejected') {
@@ -872,6 +873,8 @@ onAuthStateChanged(auth, async user => {
 });
 
 // ── Chat UI setup ──────────────────────────────────────────
+let onlineStatusSet = false;
+
 async function setupChatUI() {
   const name  = currentUser.displayName || currentUser.email;
   const color = avatarColor(name);
@@ -879,36 +882,70 @@ async function setupChatUI() {
   document.getElementById('me-email').textContent = currentUser.email;
   const av = document.getElementById('me-avatar');
   av.textContent = initials(name); av.style.background = color;
+
+  // Set online: true only once per session
+  if (!onlineStatusSet) {
+    onlineStatusSet = true;
+    await updateDoc(doc(db, 'users', currentUser.uid), { online: true });
+
+    // Set offline when tab closes or user navigates away
+    window.addEventListener('beforeunload', () => {
+      // Use sendBeacon for reliability on tab close
+      // Firestore doesn't support sendBeacon, so we use a sync-style update
+      updateDoc(doc(db, 'users', currentUser.uid), { online: false });
+    });
+
+    // Set offline when tab is hidden (phone locks, user switches tabs)
+    document.addEventListener('visibilitychange', () => {
+      if (!currentUser) return;
+      if (document.hidden) {
+        updateDoc(doc(db, 'users', currentUser.uid), { online: false });
+      } else {
+        updateDoc(doc(db, 'users', currentUser.uid), { online: true });
+      }
+    });
+  }
+
   loadContacts();
 }
 
-window.loadContacts = async function() {
+let contactsUnsubscribe = null;
+
+window.loadContacts = function() {
   const list = document.getElementById('contact-list');
   list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:0.82rem">Loading…</div>';
-  const snap = await getDocs(collection(db,'users'));
-  list.innerHTML = '';
-  snap.forEach(d => {
-    if (d.id === currentUser.uid) return;
-    const u = d.data();
-    if (u.status !== 'approved') return;   // only approved users
-    if (u.role === 'admin') return; // hide admin from contacts
-    const color = avatarColor(u.name);
-    const div = document.createElement('div');
-    div.className = 'contact-item';
-    div.dataset.uid = d.id;
-    div.dataset.name = u.name;
-    div.dataset.color = color;
-    div.innerHTML = `
-      <div class="avatar" style="background:${color};color:#fff">${initials(u.name)}</div>
-      <div class="contact-info">
-        <div class="contact-name">${esc(u.name)}</div>
-        <div class="contact-preview">${u.online ? '🟢 Online' : '⚪ Offline'}</div>
-      </div>`;
-    div.onclick = () => openChat(d.id, u.name, color);
-    list.appendChild(div);
+
+  // Unsubscribe previous listener if any
+  if (contactsUnsubscribe) { contactsUnsubscribe(); contactsUnsubscribe = null; }
+
+  // Real-time listener — updates online/offline instantly
+  contactsUnsubscribe = onSnapshot(collection(db, 'users'), (snap) => {
+    list.innerHTML = '';
+    snap.forEach(d => {
+      if (d.id === currentUser.uid) return;
+      const u = d.data();
+      if (u.status !== 'approved') return;
+      if (u.role === 'admin') return;
+      const color = avatarColor(u.name);
+      const div = document.createElement('div');
+      div.className = 'contact-item';
+      div.dataset.uid = d.id;
+      div.dataset.name = u.name;
+      div.dataset.color = color;
+      div.innerHTML = `
+        <div class="avatar" style="background:${color};color:#fff">${initials(u.name)}</div>
+        <div class="contact-info">
+          <div class="contact-name">${esc(u.name)}</div>
+          <div class="contact-preview">${u.online ? '🟢 Online' : '⚪ Offline'}</div>
+        </div>`;
+      div.onclick = () => openChat(d.id, u.name, color);
+      // Re-apply active state if this contact is currently open
+      if (selectedContact && selectedContact.uid === d.id) div.classList.add('active');
+      list.appendChild(div);
+    });
+    if (!list.children.length)
+      list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:0.82rem">No approved contacts yet.</div>';
   });
-  if (!list.children.length)
-    list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:0.82rem">No approved contacts yet.</div>';
 };
 
 function chatId(a, b) { return [a,b].sort().join('_'); }
