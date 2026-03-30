@@ -598,6 +598,19 @@
       <div class="stat-card c2"><div class="stat-label">Total Messages</div><div class="stat-value" id="stat-msgs">—</div></div>
       <div class="stat-card c3"><div class="stat-label">Active Sessions</div><div class="stat-value" id="stat-sessions">—</div></div>
       <div class="stat-card c4"><div class="stat-label">System Status</div><div class="stat-value" style="font-size:1.1rem;margin-top:4px;">✅ Online</div></div>
+      <div class="stat-card" style="border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.06)">
+        <div class="stat-label">Pending Approvals</div>
+        <div class="stat-value" id="stat-pending" style="color:var(--accent3)">—</div>
+      </div>
+    </div>
+
+    <!-- ⏳ Pending Approvals (quick action section) -->
+    <div class="admin-section" id="pending-section" style="border-color:rgba(245,158,11,0.35);display:none">
+      <div class="admin-section-header" style="background:rgba(245,158,11,0.06)">
+        <div class="admin-section-title">⏳ Pending Approvals <span id="pending-badge" style="background:rgba(245,158,11,0.2);color:#fcd34d;font-size:0.72rem;padding:2px 10px;border-radius:20px;margin-left:8px;font-weight:700"></span></div>
+        <span style="font-size:0.78rem;color:var(--muted)">Users waiting to use the app</span>
+      </div>
+      <div id="pending-cards" style="padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
     </div>
 
     <!-- User Management -->
@@ -696,7 +709,7 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-const ADMIN_EMAIL = "admin@SP.com";
+const ADMIN_EMAIL = "admin@nexchat.com";
 
 let currentUser    = null;
 let selectedContact = null;
@@ -827,6 +840,8 @@ onAuthStateChanged(auth, async user => {
     loadAdminData();
     updatePerf();
     setInterval(updatePerf, 15000);
+    // 🔑 real-time listener — auto-refreshes admin panel when any user doc changes
+    onSnapshot(collection(db, 'users'), () => loadAdminData());
     return;
   }
 
@@ -871,7 +886,8 @@ window.loadContacts = async function() {
   snap.forEach(d => {
     if (d.id === currentUser.uid) return;
     const u = d.data();
-    if (u.status !== 'approved') return;   // only show approved users
+    if (u.status !== 'approved') return;   // only approved users
+    if (u.role === 'admin' || u.email === ADMIN_EMAIL) return; // 🔑 hide admin
     const color = avatarColor(u.name);
     const div = document.createElement('div');
     div.className = 'contact-item';
@@ -994,41 +1010,93 @@ window.loadAdminData = async function() {
   ]);
 
   const users = userSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const pendingCount  = users.filter(u => u.status === 'pending').length;
-  const approvedCount = users.filter(u => u.status === 'approved').length;
+  const pendingUsers  = users.filter(u => u.status === 'pending' && u.email !== ADMIN_EMAIL);
+  const approvedUsers = users.filter(u => u.status === 'approved');
 
-  document.getElementById('stat-users').textContent    = userSnap.size;
+  document.getElementById('stat-users').textContent    = users.filter(u => u.email !== ADMIN_EMAIL).length;
   document.getElementById('stat-msgs').textContent     = msgSnap.size;
   document.getElementById('stat-sessions').textContent = users.filter(u=>u.online).length;
+  document.getElementById('stat-pending').textContent  = pendingUsers.length;
 
-  // Show pending alert badge on stat card if any pending
-  const pendingBadgeEl = document.getElementById('pending-count-badge');
-  if (pendingBadgeEl) pendingBadgeEl.textContent = pendingCount > 0 ? ` (${pendingCount} pending)` : '';
+  // ── Pending Approvals section ────────────────────────────
+  const pendingSection = document.getElementById('pending-section');
+  const pendingCards   = document.getElementById('pending-cards');
+  const pendingBadge   = document.getElementById('pending-badge');
 
+  if (pendingUsers.length > 0) {
+    pendingSection.style.display = 'block';
+    pendingBadge.textContent = `${pendingUsers.length} waiting`;
+    pendingCards.innerHTML = '';
+
+    pendingUsers.forEach(u => {
+      const color  = avatarColor(u.name);
+      const joined = u.createdAt ? u.createdAt.toDate().toLocaleDateString() : '—';
+      const card   = document.createElement('div');
+      card.style.cssText = `
+        display:flex; align-items:center; gap:14px;
+        background:var(--surface); border:1px solid rgba(245,158,11,0.2);
+        border-radius:12px; padding:14px 18px;
+        transition: border-color 0.2s;
+      `;
+      card.innerHTML = `
+        <div class="avatar" style="background:${color};color:#fff;width:42px;height:42px;font-size:0.9rem;flex-shrink:0">
+          ${initials(u.name)}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:0.92rem;color:var(--text)">${esc(u.name)}</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">${esc(u.email)}</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Registered ${joined}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button
+            onclick="window.approveUser('${u.id}','${esc(u.name)}')"
+            style="padding:8px 18px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);
+                   border-radius:8px;color:#86efac;font-size:0.82rem;font-weight:700;cursor:pointer;
+                   transition:all 0.2s;font-family:var(--font-body)"
+            onmouseover="this.style.background='rgba(34,197,94,0.28)'"
+            onmouseout="this.style.background='rgba(34,197,94,0.15)'">
+            ✅ Approve
+          </button>
+          <button
+            onclick="window.rejectUser('${u.id}','${esc(u.name)}')"
+            style="padding:8px 18px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);
+                   border-radius:8px;color:#fca5a5;font-size:0.82rem;font-weight:700;cursor:pointer;
+                   transition:all 0.2s;font-family:var(--font-body)"
+            onmouseover="this.style.background='rgba(239,68,68,0.22)'"
+            onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+            ❌ Reject
+          </button>
+        </div>`;
+      pendingCards.appendChild(card);
+    });
+  } else {
+    pendingSection.style.display = 'none';
+  }
+
+  // ── User Management table ────────────────────────────────
   tbody.innerHTML = '';
 
-  // Sort: pending first, then approved, then rejected
-  users.sort((a,b) => {
-    const order = { pending: 0, approved: 1, rejected: 2 };
-    return (order[a.status]??1) - (order[b.status]??1);
-  });
+  // Sort: pending first, then approved, then rejected — skip admin itself
+  users
+    .filter(u => u.email !== ADMIN_EMAIL)
+    .sort((a,b) => {
+      const order = { pending: 0, approved: 1, rejected: 2 };
+      return (order[a.status]??1) - (order[b.status]??1);
+    })
+    .forEach(u => {
+      const uid = u.id;
+      const color   = avatarColor(u.name);
+      const joined  = u.createdAt ? u.createdAt.toDate().toLocaleDateString() : '—';
+      const status  = u.status || 'pending';
 
-  users.forEach(u => {
-    const uid = u.id;
-    const color   = avatarColor(u.name);
-    const joined  = u.createdAt ? u.createdAt.toDate().toLocaleDateString() : '—';
-    const status  = u.status || 'pending';
+      const approvalPill = status === 'approved'
+        ? `<span class="status-pill online">✅ Approved</span>`
+        : status === 'rejected'
+        ? `<span class="status-pill" style="background:rgba(239,68,68,0.15);color:#fca5a5">❌ Rejected</span>`
+        : `<span class="status-pill" style="background:rgba(245,158,11,0.15);color:#fcd34d">⏳ Pending</span>`;
 
-    const approvalPill = status === 'approved'
-      ? `<span class="status-pill online">✅ Approved</span>`
-      : status === 'rejected'
-      ? `<span class="status-pill" style="background:rgba(239,68,68,0.15);color:#fca5a5">❌ Rejected</span>`
-      : `<span class="status-pill" style="background:rgba(245,158,11,0.15);color:#fcd34d">⏳ Pending</span>`;
-
-    const isAdmin = uid === currentUser?.uid;
-    const actionBtns = isAdmin
-      ? `<span style="color:var(--muted);font-size:0.75rem">You (Admin)</span>`
-      : `<div style="display:flex;gap:6px;flex-wrap:wrap;">
+      const actionBtns = `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
           ${status !== 'approved'
             ? `<button class="btn-small btn-success" onclick="window.approveUser('${uid}','${esc(u.name)}')">✅ Approve</button>`
             : `<button class="btn-small" style="border-color:var(--border);color:var(--muted);cursor:default" disabled>Approved</button>`
@@ -1037,23 +1105,23 @@ window.loadAdminData = async function() {
             ? `<button class="btn-small btn-danger" onclick="window.rejectUser('${uid}','${esc(u.name)}')">❌ Reject</button>`
             : ''
           }
-          <button class="btn-small btn-danger" onclick="window.deleteUser('${uid}','${esc(u.name)}')" style="opacity:0.7">🗑</button>
+          <button class="btn-small btn-danger" onclick="window.deleteUser('${uid}','${esc(u.name)}')" style="opacity:0.7" title="Delete user">🗑</button>
         </div>`;
 
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
-        <div class="avatar" style="background:${color};color:#fff;width:30px;height:30px;font-size:0.72rem;">${initials(u.name)}</div>
-        <span>${esc(u.name)}</span>
-      </td>
-      <td style="color:var(--muted)">${esc(u.email)}</td>
-      <td><span class="status-pill ${u.role==='admin'?'admin':'offline'}">${u.role||'user'}</span></td>
-      <td>${approvalPill}</td>
-      <td><span class="status-pill ${u.online?'online':'offline'}">${u.online?'Online':'Offline'}</span></td>
-      <td style="color:var(--muted)">${joined}</td>
-      <td>${actionBtns}</td>`;
-    tbody.appendChild(row);
-  });
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
+          <div class="avatar" style="background:${color};color:#fff;width:30px;height:30px;font-size:0.72rem;">${initials(u.name)}</div>
+          <span>${esc(u.name)}</span>
+        </td>
+        <td style="color:var(--muted)">${esc(u.email)}</td>
+        <td><span class="status-pill offline">user</span></td>
+        <td>${approvalPill}</td>
+        <td><span class="status-pill ${u.online?'online':'offline'}">${u.online?'Online':'Offline'}</span></td>
+        <td style="color:var(--muted)">${joined}</td>
+        <td>${actionBtns}</td>`;
+      tbody.appendChild(row);
+    });
 
   if (!tbody.children.length)
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No users found.</td></tr>';
