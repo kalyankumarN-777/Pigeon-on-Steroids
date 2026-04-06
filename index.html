@@ -25,15 +25,19 @@
       --font-body: 'Outfit', sans-serif;
     }
 
-    body {
+    html, body {
       font-family: var(--font-body);
       background: var(--bg);
       color: var(--text);
-      min-height: 100dvh;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    body {
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
     }
 
     body::before {
@@ -41,61 +45,53 @@
       position: fixed; inset: 0;
       background:
         radial-gradient(ellipse 55% 45% at 15% 5%, rgba(0,229,255,0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 35% at 85% 95%, rgba(124,58,237,0.1) 0%, transparent 55%),
-        radial-gradient(ellipse 30% 25% at 50% 50%, rgba(245,158,11,0.03) 0%, transparent 60%);
+        radial-gradient(ellipse 40% 35% at 85% 95%, rgba(124,58,237,0.1) 0%, transparent 55%);
       pointer-events: none; z-index: 0;
     }
 
-    /* ─── SCREENS ─── */
-    .screen { display: none; width: 100%; position: relative; z-index: 1; animation: fadeUp 0.45s ease both; }
+    /* ── SCREENS ── */
+    .screen { display: none; width: 100%; height: 100vh; position: relative; z-index: 1; animation: fadeUp 0.4s ease both; }
     .screen.active { display: flex; }
 
-    @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes msgIn  { from { opacity:0; transform:translateY(6px);  } to { opacity:1; transform:translateY(0); } }
-    @keyframes pulse  { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
-    @keyframes spin   { to { transform: rotate(360deg); } }
+    @keyframes fadeUp  { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes msgIn   { from { opacity:0; transform:translateY(6px);  } to { opacity:1; transform:translateY(0); } }
+    @keyframes pulse   { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
+    @keyframes spin    { to { transform: rotate(360deg); } }
+    @keyframes dotBounce { 0%,80%,100% { transform:scale(0.6);opacity:.4; } 40% { transform:scale(1);opacity:1; } }
+    @keyframes pendingPulse { 0%,100% { box-shadow:0 0 0 0 rgba(245,158,11,.3); } 50% { box-shadow:0 0 0 14px rgba(245,158,11,0); } }
 
-    /* ─── AUTH SCREEN ─── */
-    #auth-screen { flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; gap: 32px; padding: 24px; }
+    /* scrollbars */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    .brand {
-      text-align: center;
-    }
+    /* ── AUTH SCREEN ── */
+    #auth-screen { flex-direction: column; align-items: center; justify-content: center; gap: 32px; padding: 24px; overflow-y: auto; }
+
+    .brand { text-align: center; }
     .brand-logo {
-      font-family: var(--font-head);
-      font-size: 2.8rem;
-      font-weight: 800;
-      letter-spacing: -1.5px;
+      font-family: var(--font-head); font-size: 2.8rem; font-weight: 800; letter-spacing: -1.5px;
       background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 60%, var(--accent2) 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .brand-sub { color: var(--muted); font-size: 0.9rem; margin-top: 6px; letter-spacing: 0.05em; }
+    .brand-sub { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
 
     .auth-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 40px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,229,255,0.04);
+      background: var(--card); border: 1px solid var(--border); border-radius: 24px;
+      padding: 40px; width: 100%; max-width: 400px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
     }
 
     .auth-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 10px; padding: 4px; margin-bottom: 28px; }
-    .auth-tab {
-      flex: 1; text-align: center; padding: 9px; border-radius: 8px;
-      font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
-      color: var(--muted); font-family: var(--font-body);
-    }
+    .auth-tab { flex: 1; text-align: center; padding: 9px; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: var(--muted); font-family: var(--font-body); }
     .auth-tab.active { background: var(--accent2); color: #fff; }
 
     .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
     .form-group label { font-size: 0.78rem; color: var(--muted); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
     .form-group input {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 13px 15px;
-      color: var(--text); font-family: var(--font-body); font-size: 0.95rem;
-      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 13px 15px; color: var(--text); font-family: var(--font-body); font-size: 0.95rem;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s; width: 100%;
     }
     .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,0.08); }
     .form-group input::placeholder { color: var(--muted); }
@@ -104,255 +100,178 @@
       width: 100%; padding: 14px; border: none; border-radius: 10px;
       background: linear-gradient(135deg, var(--accent2), #4f46e5);
       color: #fff; font-family: var(--font-head); font-size: 0.95rem; font-weight: 700;
-      cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em;
-      box-shadow: 0 4px 20px rgba(124,58,237,0.4);
-      margin-top: 4px;
+      cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(124,58,237,0.4); margin-top: 4px;
     }
     .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,58,237,0.55); }
     .btn-primary:active { transform: translateY(0); }
     .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    .auth-error {
-      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 8px; padding: 10px 14px;
-      color: #fca5a5; font-size: 0.85rem; margin-bottom: 14px; display: none;
-    }
+    .auth-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 10px 14px; color: #fca5a5; font-size: 0.85rem; margin-bottom: 14px; display: none; }
     .auth-error.show { display: block; }
 
-    /* ─── PENDING SCREEN ─── */
-    #pending-screen { flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; gap: 28px; padding: 24px; }
-
+    /* ── PENDING SCREEN ── */
+    #pending-screen { flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 24px; }
     .pending-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 24px; padding: 44px 40px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 44px 40px;
       width: 100%; max-width: 420px; text-align: center;
       box-shadow: 0 32px 80px rgba(0,0,0,0.6);
       display: flex; flex-direction: column; align-items: center; gap: 18px;
     }
-
-    .pending-icon {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: rgba(245,158,11,0.12); border: 2px solid rgba(245,158,11,0.3);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; animation: pendingPulse 2.5s ease-in-out infinite;
-    }
-    @keyframes pendingPulse {
-      0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.3); }
-      50%      { box-shadow: 0 0 0 14px rgba(245,158,11,0); }
-    }
-
-    .pending-title { font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; color: var(--text); }
+    .pending-icon { width: 72px; height: 72px; border-radius: 50%; background: rgba(245,158,11,0.12); border: 2px solid rgba(245,158,11,0.3); display: flex; align-items: center; justify-content: center; font-size: 2rem; animation: pendingPulse 2.5s ease-in-out infinite; }
+    .pending-title { font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; }
     .pending-desc  { color: var(--muted); font-size: 0.88rem; line-height: 1.6; max-width: 300px; }
-
-    .pending-badge {
-      background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
-      color: #fcd34d; border-radius: 20px; padding: 6px 18px;
-      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em;
-    }
-
+    .pending-badge { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #fcd34d; border-radius: 20px; padding: 6px 18px; font-size: 0.8rem; font-weight: 600; }
     .pending-dots { display: flex; gap: 6px; align-items: center; }
-    .pending-dots span {
-      width: 8px; height: 8px; border-radius: 50%; background: var(--accent3);
-      animation: dotBounce 1.4s ease-in-out infinite;
-    }
+    .pending-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--accent3); animation: dotBounce 1.4s ease-in-out infinite; }
     .pending-dots span:nth-child(2) { animation-delay: 0.2s; }
     .pending-dots span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes dotBounce {
-      0%,80%,100% { transform: scale(0.6); opacity:0.4; }
-      40%          { transform: scale(1);   opacity:1;   }
-    }
 
-    /* ─── CHAT SCREEN ─── */
-    #chat-screen { flex-direction: row; height: 100dvh; width: 100%; max-width: 1100px; margin: 0 auto; }
+    /* ── CHAT SCREEN ── */
+    #chat-screen { flex-direction: row; width: 100vw; height: 100vh; overflow: hidden; }
 
     /* Sidebar */
-    .sidebar {
-      width: 280px; flex-shrink: 0;
-      background: var(--card); border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
-    }
+    .sidebar { width: 300px; min-width: 260px; flex-shrink: 0; background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-    .sidebar-header {
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-
+    .sidebar-header { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
     .sidebar-logo { font-family: var(--font-head); font-weight: 800; font-size: 1.1rem; color: var(--accent); }
-
     .sidebar-actions { display: flex; gap: 6px; }
-    .icon-btn {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; width: 32px; height: 32px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 0.85rem; transition: all 0.2s; color: var(--muted);
-    }
+
+    .icon-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; color: var(--muted); flex-shrink: 0; }
     .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-    .sidebar-section-label {
-      font-size: 0.7rem; color: var(--muted); font-weight: 600;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 16px 20px 8px;
+    /* Search bar */
+    .search-wrap { padding: 10px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .search-input {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px 8px 34px;
+      color: var(--text); font-family: var(--font-body); font-size: 0.85rem;
+      outline: none; transition: border-color 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235a5e7a' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: 10px center;
     }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--muted); }
 
-    .contact-list { flex: 1; overflow-y: auto; padding: 0 10px 10px; }
-    .contact-list::-webkit-scrollbar { width: 3px; }
-    .contact-list::-webkit-scrollbar-thumb { background: var(--border); }
+    /* Tabs: Recent / All */
+    .sidebar-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .sidebar-tab { flex: 1; text-align: center; padding: 9px; font-size: 0.78rem; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .sidebar-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-    .contact-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 12px; border-radius: 10px; cursor: pointer;
-      transition: background 0.15s; position: relative;
-    }
+    .contact-list { flex: 1; overflow-y: auto; padding: 6px 8px; }
+
+    .contact-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s; position: relative; }
     .contact-item:hover { background: var(--surface); }
     .contact-item.active { background: rgba(0,229,255,0.07); }
-    .contact-item.active::before {
-      content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-      width: 3px; height: 60%; background: var(--accent); border-radius: 0 3px 3px 0;
-    }
+    .contact-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 3px 3px 0; }
 
-    .avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
-      font-family: var(--font-head);
-    }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; font-family: var(--font-head); }
 
     .contact-info { flex: 1; min-width: 0; }
     .contact-name { font-size: 0.88rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .contact-preview { font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .contact-preview { font-size: 0.73rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
-    .unread-badge {
-      background: var(--accent); color: var(--bg);
-      font-size: 0.65rem; font-weight: 700;
-      border-radius: 10px; padding: 2px 7px; flex-shrink: 0;
-    }
+    .sidebar-footer { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .current-user-name { flex: 1; font-size: 0.85rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .current-user-email { font-size: 0.7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .sidebar-footer {
-      padding: 14px 16px;
-      border-top: 1px solid var(--border);
-      display: flex; align-items: center; gap: 10px;
-    }
-
-    .current-user-name { flex: 1; font-size: 0.85rem; font-weight: 600; color: var(--text); }
-    .current-user-email { font-size: 0.72rem; color: var(--muted); }
-
-    .btn-logout-small {
-      background: transparent; border: 1px solid var(--border);
-      border-radius: 8px; padding: 6px 12px;
-      color: var(--muted); font-family: var(--font-body); font-size: 0.78rem;
-      cursor: pointer; transition: all 0.2s;
-    }
+    .btn-logout-small { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; color: var(--muted); font-family: var(--font-body); font-size: 0.78rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
     .btn-logout-small:hover { border-color: var(--danger); color: var(--danger); }
 
-    /* Main Chat Area */
-    .chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--surface); }
+    /* Chat area */
+    .chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--surface); height: 100vh; overflow: hidden; }
 
-    .chat-topbar {
-      padding: 16px 24px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      background: var(--card); flex-shrink: 0;
-    }
-
+    .chat-topbar { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--card); flex-shrink: 0; }
     .chat-topbar-left { display: flex; align-items: center; gap: 12px; }
     .chat-topbar-name { font-family: var(--font-head); font-size: 1rem; font-weight: 700; }
     .online-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; box-shadow: 0 0 6px var(--success); }
-    .chat-topbar-status { font-size: 0.75rem; color: var(--muted); }
+    .chat-topbar-status { font-size: 0.73rem; color: var(--muted); }
 
-    .notification-banner {
-      background: rgba(0,229,255,0.08); border-bottom: 1px solid rgba(0,229,255,0.15);
-      padding: 8px 24px; font-size: 0.8rem; color: var(--accent);
-      display: none; align-items: center; gap: 8px; flex-shrink: 0;
-    }
+    .notification-banner { background: rgba(0,229,255,0.08); border-bottom: 1px solid rgba(0,229,255,0.15); padding: 8px 20px; font-size: 0.8rem; color: var(--accent); display: none; align-items: center; gap: 8px; flex-shrink: 0; }
     .notification-banner.show { display: flex; animation: fadeUp 0.3s ease; }
 
-    #messages-container {
-      flex: 1; overflow-y: auto; padding: 20px 24px;
-      display: flex; flex-direction: column; gap: 10px;
-    }
-    #messages-container::-webkit-scrollbar { width: 4px; }
-    #messages-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    #messages-container { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 
-    .msg-row { display: flex; flex-direction: column; max-width: 65%; animation: msgIn 0.25s ease both; }
+    .msg-row { display: flex; flex-direction: column; max-width: 68%; animation: msgIn 0.22s ease both; }
     .msg-row.me { align-self: flex-end; align-items: flex-end; }
     .msg-row.other { align-self: flex-start; align-items: flex-start; }
 
     .msg-sender { font-size: 0.7rem; color: var(--muted); font-weight: 600; padding: 0 4px; margin-bottom: 3px; letter-spacing: 0.04em; }
-
-    .msg-bubble {
-      padding: 11px 16px; border-radius: 16px;
-      font-size: 0.9rem; line-height: 1.55; word-break: break-word;
-    }
-    .msg-row.me .msg-bubble {
-      background: linear-gradient(135deg, var(--accent2), #4f46e5);
-      color: #fff; border-bottom-right-radius: 4px;
-    }
-    .msg-row.other .msg-bubble {
-      background: var(--card); border: 1px solid var(--border);
-      color: var(--text); border-bottom-left-radius: 4px;
-    }
-
+    .msg-bubble { padding: 11px 16px; border-radius: 16px; font-size: 0.9rem; line-height: 1.55; word-break: break-word; }
+    .msg-row.me .msg-bubble { background: linear-gradient(135deg, var(--accent2), #4f46e5); color: #fff; border-bottom-right-radius: 4px; }
+    .msg-row.other .msg-bubble { background: var(--card); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
     .msg-time { font-size: 0.67rem; color: var(--muted); padding: 0 4px; margin-top: 3px; }
 
-    .msg-system {
-      align-self: center; font-size: 0.73rem; color: var(--muted);
-      background: var(--card); border: 1px solid var(--border);
-      padding: 4px 14px; border-radius: 20px;
-    }
+    .msg-system { align-self: center; font-size: 0.73rem; color: var(--muted); background: var(--card); border: 1px solid var(--border); padding: 4px 14px; border-radius: 20px; }
 
-    .empty-state {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 10px; opacity: 0.35;
-    }
+    /* file / media messages */
+    .msg-img { max-width: 220px; max-height: 200px; border-radius: 10px; display: block; cursor: pointer; margin-top: 2px; object-fit: cover; }
+    .msg-video { max-width: 260px; border-radius: 10px; margin-top: 2px; display: block; }
+    .msg-file-link { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; color: var(--accent); text-decoration: none; font-size: 0.85rem; margin-top: 2px; }
+    .msg-file-link:hover { background: rgba(255,255,255,0.12); }
+
+    /* upload progress */
+    .upload-progress { font-size: 0.78rem; color: var(--muted); padding: 4px 8px; display: flex; align-items: center; gap: 8px; }
+    .upload-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .upload-bar-fill { height: 100%; background: var(--accent2); border-radius: 2px; transition: width 0.2s; }
+
+    /* empty state */
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; opacity: 0.35; }
     .empty-state-icon { font-size: 2.5rem; }
     .empty-state-text { font-size: 0.85rem; color: var(--muted); }
 
-    .chat-inputbar {
-      padding: 16px 24px; border-top: 1px solid var(--border);
-      display: flex; gap: 10px; background: var(--card); flex-shrink: 0;
-    }
-
-    #msg-input {
-      flex: 1; background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px 16px;
-      color: var(--text); font-family: var(--font-body); font-size: 0.92rem;
-      outline: none; transition: border-color 0.2s;
-    }
+    /* input bar */
+    .chat-inputbar { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-end; background: var(--card); flex-shrink: 0; }
+    #msg-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-family: var(--font-body); font-size: 0.92rem; outline: none; transition: border-color 0.2s; resize: none; min-height: 42px; max-height: 120px; overflow-y: auto; }
     #msg-input:focus { border-color: var(--accent); }
     #msg-input::placeholder { color: var(--muted); }
     #msg-input:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .btn-send {
-      background: linear-gradient(135deg, var(--accent2), #4f46e5);
-      border: none; border-radius: 10px; padding: 0 20px;
-      color: #fff; font-size: 1.1rem; cursor: pointer;
-      transition: all 0.2s; box-shadow: 0 4px 14px rgba(124,58,237,0.35);
-    }
+    .btn-send { background: linear-gradient(135deg, var(--accent2), #4f46e5); border: none; border-radius: 10px; padding: 0 18px; height: 42px; color: #fff; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(124,58,237,0.35); flex-shrink: 0; }
     .btn-send:hover { transform: scale(1.05); }
     .btn-send:active { transform: scale(0.97); }
     .btn-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    /* ─── ADMIN SCREEN ─── */
-    #admin-screen { flex-direction: column; min-height: 100dvh; width: 100%; max-width: 1100px; margin: 0 auto; }
+    .attach-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; color: var(--muted); font-size: 1.1rem; flex-shrink: 0; }
+    .attach-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-    .admin-topbar {
-      background: var(--card); border-bottom: 1px solid var(--border);
-      padding: 16px 28px; display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
-    }
+    /* no chat */
+    .no-chat-selected { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--muted); background: var(--surface); }
+    .no-chat-icon { font-size: 3rem; opacity: 0.3; }
+    .no-chat-text { font-size: 0.9rem; opacity: 0.5; }
 
+    /* group modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; animation: fadeUp 0.25s ease; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px; max-height: 80vh; overflow-y: auto; }
+    .modal-title { font-family: var(--font-head); font-size: 1.05rem; font-weight: 700; }
+    .modal-input { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-family: var(--font-body); font-size: 0.9rem; outline: none; width: 100%; transition: border-color 0.2s; }
+    .modal-input:focus { border-color: var(--accent); }
+    .modal-label { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    .member-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; cursor: pointer; border-radius: 8px; }
+    .member-row:hover { background: var(--surface); }
+    .member-row input[type=checkbox] { accent-color: var(--accent2); width: 16px; height: 16px; flex-shrink: 0; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .modal-btn { flex: 1; padding: 11px; border-radius: 10px; font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: all 0.2s; border: none; }
+    .modal-btn-primary { background: linear-gradient(135deg, var(--accent2), #4f46e5); color: #fff; }
+    .modal-btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+
+    /* lightbox */
+    #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; align-items: center; justify-content: center; cursor: zoom-out; }
+    #lightbox.show { display: flex; }
+    #lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+
+    /* ── ADMIN SCREEN ── */
+    #admin-screen { flex-direction: column; width: 100vw; height: 100vh; overflow: hidden; }
+
+    .admin-topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
     .admin-brand { font-family: var(--font-head); font-size: 1.1rem; font-weight: 800; }
     .admin-brand span { color: var(--accent3); }
 
-    .admin-body { flex: 1; padding: 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+    .admin-body { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; min-height: 0; }
 
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
-
-    .stat-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 20px 24px; display: flex; flex-direction: column; gap: 6px;
-    }
-    .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+    .stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
     .stat-value { font-family: var(--font-head); font-size: 2rem; font-weight: 800; }
     .stat-card.c1 .stat-value { color: var(--accent); }
     .stat-card.c2 .stat-value { color: var(--accent2); }
@@ -360,183 +279,124 @@
     .stat-card.c4 .stat-value { color: var(--success); }
 
     .admin-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .admin-section-header {
-      padding: 16px 20px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    .admin-section-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
     .admin-section-title { font-family: var(--font-head); font-size: 0.95rem; font-weight: 700; }
 
-    .btn-small {
-      padding: 6px 14px; border-radius: 7px; font-size: 0.78rem; font-weight: 600;
-      cursor: pointer; font-family: var(--font-body); border: 1px solid; transition: all 0.2s;
-    }
-    .btn-danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
-    .btn-danger:hover { background: rgba(239,68,68,0.2); }
-    .btn-success { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.4); color: #86efac; }
+    .btn-small { padding: 6px 14px; border-radius: 7px; font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); border: 1px solid; transition: all 0.2s; }
+    .btn-danger  { background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.4);  color: #fca5a5; }
+    .btn-danger:hover  { background: rgba(239,68,68,0.2); }
+    .btn-success { background: rgba(34,197,94,0.1);  border-color: rgba(34,197,94,0.4);  color: #86efac; }
     .btn-success:hover { background: rgba(34,197,94,0.2); }
-    .btn-accent { background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.3); color: var(--accent); }
-    .btn-accent:hover { background: rgba(0,229,255,0.18); }
+    .btn-accent  { background: rgba(0,229,255,0.1);  border-color: rgba(0,229,255,0.3);  color: var(--accent); }
+    .btn-accent:hover  { background: rgba(0,229,255,0.18); }
 
     .admin-table { width: 100%; border-collapse: collapse; }
-    .admin-table th {
-      padding: 10px 16px; text-align: left;
-      font-size: 0.72rem; color: var(--muted); font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      border-bottom: 1px solid var(--border);
-    }
-    .admin-table td {
-      padding: 12px 16px; font-size: 0.85rem;
-      border-bottom: 1px solid rgba(30,32,53,0.5);
-    }
+    .admin-table th { padding: 10px 14px; text-align: left; font-size: 0.7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
+    .admin-table td { padding: 10px 14px; font-size: 0.83rem; border-bottom: 1px solid rgba(30,32,53,0.5); }
     .admin-table tr:last-child td { border-bottom: none; }
     .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
 
-    .status-pill {
-      display: inline-block; padding: 2px 10px; border-radius: 20px;
-      font-size: 0.72rem; font-weight: 600;
-    }
+    .status-pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
     .status-pill.online  { background: rgba(34,197,94,0.15);  color: #86efac; }
     .status-pill.offline { background: rgba(90,94,122,0.2);   color: var(--muted); }
     .status-pill.admin   { background: rgba(245,158,11,0.15); color: #fcd34d; }
 
-    .activity-log { max-height: 200px; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
-    .activity-log::-webkit-scrollbar { width: 3px; }
-    .activity-log::-webkit-scrollbar-thumb { background: var(--border); }
-    .log-entry { display: flex; gap: 10px; font-size: 0.8rem; }
-    .log-time { color: var(--muted); flex-shrink: 0; font-family: 'Courier New', monospace; font-size: 0.72rem; }
+    .activity-log { max-height: 180px; overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+    .log-entry { display: flex; gap: 10px; font-size: 0.78rem; }
+    .log-time { color: var(--muted); flex-shrink: 0; font-family: 'Courier New', monospace; font-size: 0.7rem; }
     .log-text { color: var(--text); }
 
-    .perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px; }
+    .perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 14px; }
     .perf-item { display: flex; flex-direction: column; gap: 6px; }
-    .perf-label { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
-    .perf-bar-wrap { height: 6px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+    .perf-label { font-size: 0.73rem; color: var(--muted); font-weight: 600; }
+    .perf-bar-wrap { height: 5px; background: var(--surface); border-radius: 4px; overflow: hidden; }
     .perf-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-    .perf-val { font-size: 0.78rem; color: var(--text); font-weight: 600; }
+    .perf-val { font-size: 0.76rem; color: var(--text); font-weight: 600; }
 
-    /* No chat selected */
-    .no-chat-selected {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 12px;
-      color: var(--muted); background: var(--surface);
-    }
-    .no-chat-icon { font-size: 3rem; opacity: 0.3; }
-    .no-chat-text { font-size: 0.9rem; opacity: 0.5; }
+    /* spinner */
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; }
 
-    /* Loading spinner */
-    .spinner {
-      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff; border-radius: 50%;
-      animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle;
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-    @media (max-width: 640px) {
-      .sidebar { width: 100%; position: fixed; bottom: 0; left: 0; right: 0; height: 60px; flex-direction: row; border-right: none; border-top: 1px solid var(--border); z-index: 10; }
+    /* responsive */
+    @media (max-width: 600px) {
+      .sidebar { width: 100vw; height: 100vh; position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.3s; }
+      .sidebar.open { transform: translateX(0); }
+      .chat-area { width: 100vw; }
+      #admin-screen .admin-body { padding: 14px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════
-     AUTH SCREEN
-══════════════════════════════════════ -->
+<!-- ══════════ AUTH SCREEN ══════════ -->
 <div id="auth-screen" class="screen active">
   <div class="brand">
     <div class="brand-logo">NexChat</div>
     <div class="brand-sub">Instant · Secure · Real-Time</div>
   </div>
-
   <div class="auth-card">
     <div class="auth-tabs">
       <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
       <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Register</div>
     </div>
-
     <div id="auth-error" class="auth-error"></div>
-
-    <!-- LOGIN FORM -->
     <div id="login-form">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
-      </div>
+      <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/></div>
       <button class="btn-primary" id="btn-login" onclick="doLogin()">Sign In</button>
     </div>
-
-    <!-- REGISTER FORM -->
     <div id="register-form" style="display:none">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="reg-name" placeholder="Your name" autocomplete="name"/>
-      </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email"/>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password"/>
-      </div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="Your name" autocomplete="name"/></div>
+      <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password"/></div>
       <button class="btn-primary" id="btn-register" onclick="doRegister()">Create Account</button>
     </div>
-
-    <p style="text-align:center; font-size:0.75rem; color:var(--muted); margin-top:18px;">
+    <p style="text-align:center;font-size:0.75rem;color:var(--muted);margin-top:18px;">
       Admin? Use <strong style="color:var(--accent3)">admin@nexchat.com</strong> / <strong style="color:var(--accent3)">admin123</strong>
     </p>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     PENDING APPROVAL SCREEN
-══════════════════════════════════════ -->
+<!-- ══════════ PENDING SCREEN ══════════ -->
 <div id="pending-screen" class="screen">
-  <div class="brand">
-    <div class="brand-logo">NexChat</div>
-  </div>
+  <div class="brand"><div class="brand-logo">NexChat</div></div>
   <div class="pending-card">
     <div class="pending-icon">⏳</div>
     <div class="pending-title">Awaiting Approval</div>
     <div class="pending-badge">PENDING REVIEW</div>
-    <div class="pending-desc">
-      Your account has been registered successfully.<br/>
-      An admin needs to approve your account before you can start chatting. Please check back soon!
-    </div>
-    <div class="pending-dots">
-      <span></span><span></span><span></span>
-    </div>
-    <div style="font-size:0.78rem;color:var(--muted);margin-top:4px">Checking status automatically…</div>
+    <div class="pending-desc">Your account has been registered.<br/>An admin needs to approve you before you can chat.</div>
+    <div class="pending-dots"><span></span><span></span><span></span></div>
+    <div style="font-size:0.78rem;color:var(--muted)">Checking status automatically…</div>
     <button class="btn-logout-small" style="margin-top:8px" onclick="doLogout()">Sign out</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     CHAT SCREEN
-══════════════════════════════════════ -->
+<!-- ══════════ CHAT SCREEN ══════════ -->
 <div id="chat-screen" class="screen">
   <!-- Sidebar -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <span class="sidebar-logo">NexChat</span>
       <div class="sidebar-actions">
-        <div class="icon-btn" title="Refresh contacts" onclick="loadContacts()">↻</div>
+        <div class="icon-btn" title="New Group" onclick="showGroupModal()">👥</div>
+        <div class="icon-btn" title="New Chat / Search" onclick="setTab('all')">✏️</div>
       </div>
     </div>
 
-    <div class="sidebar-section-label">Contacts</div>
-    <div class="contact-list" id="contact-list">
-      <!-- populated dynamically -->
+    <!-- Search -->
+    <div class="search-wrap">
+      <input class="search-input" id="search-input" type="text" placeholder="Search users or groups…" oninput="filterContacts(this.value)"/>
     </div>
 
+    <!-- Tabs -->
+    <div class="sidebar-tabs">
+      <div class="sidebar-tab active" id="tab-recent" onclick="setTab('recent')">💬 Recent</div>
+      <div class="sidebar-tab" id="tab-all" onclick="setTab('all')">👤 All Users</div>
+    </div>
+
+    <div class="contact-list" id="contact-list"></div>
+
     <div class="sidebar-footer">
-      <div class="avatar" id="me-avatar" style="background:var(--accent2); color:#fff"></div>
+      <div class="avatar" id="me-avatar" style="background:var(--accent2);color:#fff;width:34px;height:34px;font-size:0.78rem"></div>
       <div style="flex:1;min-width:0">
         <div class="current-user-name" id="me-name"></div>
         <div class="current-user-email" id="me-email"></div>
@@ -546,42 +406,72 @@
   </div>
 
   <!-- Chat area -->
-  <div class="chat-area" id="chat-area">
+  <div class="chat-area">
     <div class="no-chat-selected" id="no-chat">
       <div class="no-chat-icon">💬</div>
       <div class="no-chat-text">Select a contact to start chatting</div>
     </div>
 
-    <div id="active-chat" style="display:none; flex-direction:column; flex:1; min-height:0;">
+    <div id="active-chat" style="display:none;flex-direction:column;flex:1;min-height:0;height:100vh;overflow:hidden;">
       <div class="chat-topbar">
         <div class="chat-topbar-left">
+          <!-- mobile back -->
+          <div class="icon-btn" id="btn-back" style="display:none" onclick="showSidebar()">←</div>
           <div class="avatar" id="chat-avatar" style="width:34px;height:34px;font-size:0.8rem;"></div>
           <div>
             <div class="chat-topbar-name" id="chat-name"></div>
-            <div class="chat-topbar-status">Online</div>
+            <div class="chat-topbar-status" id="chat-status">Online</div>
           </div>
-          <div class="online-dot" style="margin-left:6px;"></div>
+          <div class="online-dot" id="chat-online-dot" style="margin-left:6px;"></div>
         </div>
       </div>
 
       <div class="notification-banner" id="notif-banner">
-        <span>🔔</span>
-        <span id="notif-text"></span>
+        <span>🔔</span><span id="notif-text"></span>
       </div>
 
       <div id="messages-container"></div>
 
+      <!-- upload progress bar -->
+      <div class="upload-progress" id="upload-progress" style="display:none">
+        <span id="upload-label">Uploading…</span>
+        <div class="upload-bar"><div class="upload-bar-fill" id="upload-fill" style="width:0%"></div></div>
+        <span id="upload-pct">0%</span>
+      </div>
+
       <div class="chat-inputbar">
-        <input type="text" id="msg-input" placeholder="Type a message…" maxlength="500" autocomplete="off"/>
+        <label class="attach-btn" title="Attach file / image / video">
+          📎
+          <input type="file" id="file-input" accept="image/*,video/*,.gif,.pdf,.zip,.doc,.docx,.txt" style="display:none" onchange="sendFile(this)"/>
+        </label>
+        <input type="text" id="msg-input" placeholder="Type a message…" maxlength="1000" autocomplete="off"/>
         <button class="btn-send" id="btn-send" onclick="sendMessage()">➤</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     ADMIN SCREEN
-══════════════════════════════════════ -->
+<!-- ══════════ GROUP MODAL ══════════ -->
+<div class="modal-overlay" id="group-modal">
+  <div class="modal-box">
+    <div class="modal-title">👥 Create Group Chat</div>
+    <div class="modal-label">Group Name</div>
+    <input class="modal-input" id="group-name-input" type="text" placeholder="e.g. Squad, Project Team…" maxlength="40"/>
+    <div class="modal-label">Select Members</div>
+    <div id="group-member-list" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-primary" onclick="createGroup()">Create</button>
+      <button class="modal-btn modal-btn-secondary" onclick="closeGroupModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ LIGHTBOX ══════════ -->
+<div id="lightbox" onclick="this.classList.remove('show')">
+  <img id="lightbox-img" src="" alt=""/>
+</div>
+
+<!-- ══════════ ADMIN SCREEN ══════════ -->
 <div id="admin-screen" class="screen">
   <div class="admin-topbar">
     <div class="admin-brand">NexChat <span>Admin</span></div>
@@ -590,9 +480,7 @@
       <button class="btn-small btn-danger" onclick="doLogout()">Logout</button>
     </div>
   </div>
-
   <div class="admin-body">
-    <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card c1"><div class="stat-label">Total Users</div><div class="stat-value" id="stat-users">—</div></div>
       <div class="stat-card c2"><div class="stat-label">Total Messages</div><div class="stat-value" id="stat-msgs">—</div></div>
@@ -604,13 +492,13 @@
       </div>
     </div>
 
-    <!-- ⏳ Pending Approvals (quick action section) -->
+    <!-- Pending approvals quick section -->
     <div class="admin-section" id="pending-section" style="border-color:rgba(245,158,11,0.35);display:none">
       <div class="admin-section-header" style="background:rgba(245,158,11,0.06)">
         <div class="admin-section-title">⏳ Pending Approvals <span id="pending-badge" style="background:rgba(245,158,11,0.2);color:#fcd34d;font-size:0.72rem;padding:2px 10px;border-radius:20px;margin-left:8px;font-weight:700"></span></div>
         <span style="font-size:0.78rem;color:var(--muted)">Users waiting to use the app</span>
       </div>
-      <div id="pending-cards" style="padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+      <div id="pending-cards" style="padding:14px;display:flex;flex-direction:column;gap:10px;"></div>
     </div>
 
     <!-- User Management -->
@@ -619,29 +507,17 @@
         <div class="admin-section-title">👥 User Management</div>
         <button class="btn-small btn-accent" onclick="loadAdminData()">↻ Refresh</button>
       </div>
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Approval</th>
-            <th>Online</th>
-            <th>Joined</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="admin-user-table">
-          <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Loading…</td></tr>
-        </tbody>
-      </table>
+      <div style="overflow-x:auto">
+        <table class="admin-table">
+          <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Approval</th><th>Online</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="admin-user-table"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Loading…</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Activity Log -->
     <div class="admin-section">
-      <div class="admin-section-header">
-        <div class="admin-section-title">📋 Activity Log</div>
-      </div>
+      <div class="admin-section-header"><div class="admin-section-title">📋 Activity Log</div></div>
       <div class="activity-log" id="activity-log"></div>
     </div>
 
@@ -652,48 +528,31 @@
         <button class="btn-small btn-accent" onclick="updatePerf()">↻ Refresh</button>
       </div>
       <div class="perf-grid">
-        <div class="perf-item">
-          <div class="perf-label">Server Uptime</div>
-          <div class="perf-bar-wrap"><div class="perf-bar" id="bar-uptime" style="background:var(--success);width:99%"></div></div>
-          <div class="perf-val" id="val-uptime">99.9%</div>
-        </div>
-        <div class="perf-item">
-          <div class="perf-label">Message Throughput</div>
-          <div class="perf-bar-wrap"><div class="perf-bar" id="bar-throughput" style="background:var(--accent);width:72%"></div></div>
-          <div class="perf-val" id="val-throughput">72%</div>
-        </div>
-        <div class="perf-item">
-          <div class="perf-label">Database Load</div>
-          <div class="perf-bar-wrap"><div class="perf-bar" id="bar-db" style="background:var(--accent3);width:45%"></div></div>
-          <div class="perf-val" id="val-db">45%</div>
-        </div>
-        <div class="perf-item">
-          <div class="perf-label">Memory Usage</div>
-          <div class="perf-bar-wrap"><div class="perf-bar" id="bar-mem" style="background:var(--accent2);width:61%"></div></div>
-          <div class="perf-val" id="val-mem">61%</div>
-        </div>
+        <div class="perf-item"><div class="perf-label">Server Uptime</div><div class="perf-bar-wrap"><div class="perf-bar" id="bar-uptime" style="background:var(--success);width:99%"></div></div><div class="perf-val" id="val-uptime">99.9%</div></div>
+        <div class="perf-item"><div class="perf-label">Message Throughput</div><div class="perf-bar-wrap"><div class="perf-bar" id="bar-throughput" style="background:var(--accent);width:72%"></div></div><div class="perf-val" id="val-throughput">72%</div></div>
+        <div class="perf-item"><div class="perf-label">Database Load</div><div class="perf-bar-wrap"><div class="perf-bar" id="bar-db" style="background:var(--accent3);width:45%"></div></div><div class="perf-val" id="val-db">45%</div></div>
+        <div class="perf-item"><div class="perf-label">Memory Usage</div><div class="perf-bar-wrap"><div class="perf-bar" id="bar-mem" style="background:var(--accent2);width:61%"></div></div><div class="perf-val" id="val-mem">61%</div></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     FIREBASE + APP LOGIC
-══════════════════════════════════════ -->
+<!-- ══════════ FIREBASE + APP LOGIC ══════════ -->
 <script type="module">
-import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp }                                  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword,
          signInWithEmailAndPassword, signOut,
-         onAuthStateChanged, updateProfile }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+         onAuthStateChanged, updateProfile }               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc,
-         getDoc, getDocs, addDoc, updateDoc,
-         deleteDoc, onSnapshot, query,
-         orderBy, serverTimestamp, where,
-         limit }                                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+         getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+         onSnapshot, query, orderBy, serverTimestamp,
+         limit, where }                                    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable,
+         getDownloadURL }                                  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-// ───────────────────────────────────────────────
+// ─────────────────────────────────────────────────
 // 🔴 PASTE YOUR FIREBASE CONFIG HERE
-// ───────────────────────────────────────────────
+// ─────────────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyAEUDONHnF6TqYlGYKhtnHq8fWbLl9AgAo",
   authDomain: "swiftpigeon-c7bba.firebaseapp.com",
@@ -703,52 +562,127 @@ const firebaseConfig = {
   appId: "1:461317929891:web:9f0a07b68813ba24893816",
   measurementId: "G-MRGF95HV5L"
 };
-// ───────────────────────────────────────────────
+// ─────────────────────────────────────────────────
 
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+const app     = initializeApp(firebaseConfig);
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
 
 const ADMIN_EMAIL = "admin@SP.com";
 
-let currentUser    = null;
-let selectedContact = null;
-let msgUnsubscribe = null;
-let activityLogs   = [];
+let currentUser      = null;
+let selectedContact  = null;
+let msgUnsubscribe   = null;
+let approvalUnsub    = null;
+let contactsUnsub    = null;
+let onlineStatusSet  = false;
+let currentTab       = 'recent';    // 'recent' | 'all'
+let allUsersCache    = [];          // cache of approved users
+let recentUids       = new Set();   // uids the current user chatted with
+let activityLogs     = [];
 
-// ── Helpers ──────────────────────────────────────────────
-function avatarColor(name = '') {
-  const colors = ['#7c3aed','#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#14b8a6'];
-  let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
-  return colors[Math.abs(h) % colors.length];
+// ── helpers ──────────────────────────────────────
+function avatarColor(name='') {
+  const c = ['#7c3aed','#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#14b8a6'];
+  let h = 0; for (const ch of name) h = (h*31+ch.charCodeAt(0))&0xffffffff;
+  return c[Math.abs(h)%c.length];
 }
-function initials(name = '') { return name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2) || '?'; }
-function fmtTime(ts) {
-  if (!ts) return '';
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-}
+function initials(name='') { return name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'?'; }
+function fmtTime(ts) { if(!ts) return ''; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display='none'; });
+  document.querySelectorAll('.screen').forEach(s=>{ s.classList.remove('active'); s.style.display='none'; });
   const el = document.getElementById(id);
-  el.style.display = 'flex'; el.classList.add('active');
+  el.style.display='flex'; el.classList.add('active');
 }
 function log(text) {
-  const now = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  activityLogs.unshift({ time: now, text });
-  if (activityLogs.length > 50) activityLogs.pop();
-  renderActivityLog();
+  const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  activityLogs.unshift({time:now,text});
+  if(activityLogs.length>50) activityLogs.pop();
+  renderLog();
 }
-function renderActivityLog() {
-  const el = document.getElementById('activity-log');
-  if (!el) return;
-  el.innerHTML = activityLogs.map(l =>
-    `<div class="log-entry"><span class="log-time">${l.time}</span><span class="log-text">${esc(l.text)}</span></div>`
-  ).join('') || '<div style="color:var(--muted);font-size:0.8rem;padding:4px">No activity yet.</div>';
+function renderLog() {
+  const el = document.getElementById('activity-log'); if(!el) return;
+  el.innerHTML = activityLogs.map(l=>`<div class="log-entry"><span class="log-time">${l.time}</span><span class="log-text">${esc(l.text)}</span></div>`).join('');
+}
+function showNotif(text) {
+  const b = document.getElementById('notif-banner');
+  document.getElementById('notif-text').textContent = text;
+  b.classList.add('show');
+  setTimeout(()=>b.classList.remove('show'), 3000);
+}
+function chatId(a,b) { return [a,b].sort().join('_'); }
+
+// ── tab / search ─────────────────────────────────
+window.setTab = function(tab) {
+  currentTab = tab;
+  document.getElementById('tab-recent').classList.toggle('active', tab==='recent');
+  document.getElementById('tab-all').classList.toggle('active', tab==='all');
+  renderSidebar(document.getElementById('search-input').value);
+};
+
+window.filterContacts = function(q) {
+  renderSidebar(q);
+  if(q.trim()) setTab('all'); // auto switch to all when searching
+};
+
+function renderSidebar(query='') {
+  const list = document.getElementById('contact-list');
+  list.innerHTML = '';
+  const q = query.toLowerCase().trim();
+
+  let items = [...allUsersCache];
+
+  if(currentTab === 'recent' && !q) {
+    items = items.filter(u => recentUids.has(u.id));
+    if(!items.length) {
+      list.innerHTML = `<div style="padding:20px 14px;text-align:center;color:var(--muted);font-size:0.82rem">No recent chats.<br/><span style="color:var(--accent);cursor:pointer" onclick="setTab('all')">Find someone to chat with →</span></div>`;
+      return;
+    }
+  }
+
+  if(q) items = items.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+
+  if(!items.length) {
+    list.innerHTML = `<div style="padding:20px 14px;text-align:center;color:var(--muted);font-size:0.82rem">No users found.</div>`;
+    return;
+  }
+
+  items.forEach(u => {
+    const color = avatarColor(u.name);
+    const div = document.createElement('div');
+    div.className = 'contact-item' + (selectedContact?.uid===u.id?' active':'');
+    div.dataset.uid = u.id;
+    div.innerHTML = `
+      <div class="avatar" style="background:${color};color:#fff">${initials(u.name)}</div>
+      <div class="contact-info">
+        <div class="contact-name">${esc(u.name)}</div>
+        <div class="contact-preview">${u.online?'🟢 Online':'⚪ Offline'}</div>
+      </div>`;
+    div.onclick = () => openChat(u.id, u.name, color, false);
+    list.appendChild(div);
+  });
+
+  // Also show groups
+  groupsCache.forEach(g => {
+    if(!g.members.includes(currentUser.uid)) return;
+    if(currentTab==='recent' && !q && !recentUids.has('group_'+g.id)) return;
+    if(q && !g.name.toLowerCase().includes(q)) return;
+    const div = document.createElement('div');
+    div.className = 'contact-item' + (selectedContact?.uid===g.id?' active':'');
+    div.innerHTML = `
+      <div class="avatar" style="background:var(--accent2);color:#fff;font-size:1rem">👥</div>
+      <div class="contact-info">
+        <div class="contact-name">${esc(g.name)}</div>
+        <div class="contact-preview">Group · ${g.members.length} members</div>
+      </div>`;
+    div.onclick = () => openGroupChat(g.id, g.name);
+    list.appendChild(div);
+  });
 }
 
-// ── Tab switching ──────────────────────────────────────────
+// ── Auth tab switch ──────────────────────────────
 window.switchTab = function(tab) {
   document.getElementById('login-form').style.display    = tab==='login'    ? 'block' : 'none';
   document.getElementById('register-form').style.display = tab==='register' ? 'block' : 'none';
@@ -757,113 +691,95 @@ window.switchTab = function(tab) {
   document.getElementById('auth-error').classList.remove('show');
 };
 
-function showError(msg) {
-  const el = document.getElementById('auth-error');
-  el.textContent = msg; el.classList.add('show');
-}
+function showError(msg) { const e=document.getElementById('auth-error'); e.textContent=msg; e.classList.add('show'); }
 
-// ── Register ───────────────────────────────────────────────
+// ── Register ─────────────────────────────────────
 window.doRegister = async function() {
   const name  = document.getElementById('reg-name').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const pass  = document.getElementById('reg-password').value;
-  if (!name || !email || !pass) return showError('Please fill in all fields.');
-  if (pass.length < 6) return showError('Password must be at least 6 characters.');
-
+  if(!name||!email||!pass) return showError('Please fill in all fields.');
+  if(pass.length<6) return showError('Password must be at least 6 characters.');
   const btn = document.getElementById('btn-register');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creating…';
-
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Creating…';
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(cred.user, { displayName: name });
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      name, email, role: 'user',
-      status: 'pending',          // 🔑 NEW: starts as pending
+    await updateProfile(cred.user, {displayName: name});
+    await setDoc(doc(db,'users',cred.user.uid), {
+      name, email, role:'user', status:'pending',
       createdAt: serverTimestamp(), online: false
     });
-    log(`New user registered (pending): ${name} (${email})`);
+    log(`New user registered (pending): ${name}`);
   } catch(e) {
     showError(e.message.replace('Firebase: ',''));
-    btn.disabled = false; btn.textContent = 'Create Account';
+    btn.disabled=false; btn.textContent='Create Account';
   }
 };
 
-// ── Login ──────────────────────────────────────────────────
+// ── Login ────────────────────────────────────────
 window.doLogin = async function() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-password').value;
-  if (!email || !pass) return showError('Please enter email and password.');
-
+  if(!email||!pass) return showError('Please enter email and password.');
   const btn = document.getElementById('btn-login');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Signing in…';
-
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Signing in…';
   try {
     await signInWithEmailAndPassword(auth, email, pass);
     log(`User signed in: ${email}`);
   } catch(e) {
     showError('Invalid email or password.');
-    btn.disabled = false; btn.textContent = 'Sign In';
+    btn.disabled=false; btn.textContent='Sign In';
   }
 };
 
-// ── Logout ─────────────────────────────────────────────────
+// ── Logout ───────────────────────────────────────
 window.doLogout = async function() {
-  if (currentUser) {
-    try { await updateDoc(doc(db,'users',currentUser.uid),{ online: false }); } catch(_) {}
+  if(currentUser) {
+    try { await updateDoc(doc(db,'users',currentUser.uid),{online:false}); } catch(_) {}
     log(`User logged out: ${currentUser.email}`);
   }
-  onlineStatusSet = false;
-  if (msgUnsubscribe)      { msgUnsubscribe();      msgUnsubscribe = null; }
-  if (approvalUnsubscribe) { approvalUnsubscribe(); approvalUnsubscribe = null; }
-  if (contactsUnsubscribe) { contactsUnsubscribe(); contactsUnsubscribe = null; }
+  onlineStatusSet=false;
+  if(msgUnsubscribe)  { msgUnsubscribe();  msgUnsubscribe=null; }
+  if(approvalUnsub)   { approvalUnsub();   approvalUnsub=null; }
+  if(contactsUnsub)   { contactsUnsub();   contactsUnsub=null; }
+  allUsersCache=[]; groupsCache=[]; recentUids=new Set();
   await signOut(auth);
 };
 
-// ── Auth state ─────────────────────────────────────────────
+// ── Auth state ───────────────────────────────────
 let approvalUnsubscribe = null;
-
 onAuthStateChanged(auth, async user => {
-  if (!user) {
-    currentUser = null; selectedContact = null;
-    if (approvalUnsubscribe) { approvalUnsubscribe(); approvalUnsubscribe = null; }
-    document.getElementById('btn-login').disabled = false;
-    document.getElementById('btn-login').textContent = 'Sign In';
-    document.getElementById('btn-register').disabled = false;
-    document.getElementById('btn-register').textContent = 'Create Account';
+  if(!user) {
+    currentUser=null; selectedContact=null;
+    if(approvalUnsubscribe){approvalUnsubscribe();approvalUnsubscribe=null;}
+    document.getElementById('btn-login').disabled=false;
+    document.getElementById('btn-login').textContent='Sign In';
+    document.getElementById('btn-register').disabled=false;
+    document.getElementById('btn-register').textContent='Create Account';
     showScreen('auth-screen'); return;
   }
-
-  currentUser = user;
-
-  // ✅ GET USER ROLE FROM FIRESTORE FIRST
-  const userSnap = await getDoc(doc(db, 'users', user.uid));
-  if (!userSnap.exists()) {
-    showScreen('auth-screen');
-    return;
-  }
+  currentUser=user;
+  const userSnap = await getDoc(doc(db,'users',user.uid));
+  if(!userSnap.exists()){showScreen('auth-screen');return;}
   const userData = userSnap.data();
 
-  // ✅ ADMIN ALWAYS GOES TO ADMIN SCREEN (checked by role field, not email)
-  if (userData.role === 'admin') {
+  if(userData.role==='admin') {
     showScreen('admin-screen');
-    document.getElementById('admin-email-label').textContent = user.email;
-    loadAdminData();
-    updatePerf();
+    document.getElementById('admin-email-label').textContent=user.email;
+    loadAdminData(); updatePerf();
     setInterval(updatePerf, 15000);
-    // real-time listener — auto-refreshes admin panel when any user doc changes
-    onSnapshot(collection(db, 'users'), () => loadAdminData());
+    onSnapshot(collection(db,'users'),()=>loadAdminData());
     return;
   }
 
-  // ✅ REGULAR USERS: REAL-TIME APPROVAL CHECK
   approvalUnsubscribe && approvalUnsubscribe();
-  approvalUnsubscribe = onSnapshot(doc(db, 'users', user.uid), async (snap) => {
-    if (!snap.exists()) return;
-    const data = snap.data();
-    if (data.status === 'approved') {
+  approvalUnsubscribe = onSnapshot(doc(db,'users',user.uid), async snap => {
+    if(!snap.exists()) return;
+    const d = snap.data();
+    if(d.status==='approved') {
       showScreen('chat-screen');
       setupChatUI();
-    } else if (data.status === 'rejected') {
+    } else if(d.status==='rejected') {
       alert('❌ Your account has been rejected by the admin.');
       doLogout();
     } else {
@@ -872,8 +788,8 @@ onAuthStateChanged(auth, async user => {
   });
 });
 
-// ── Chat UI setup ──────────────────────────────────────────
-let onlineStatusSet = false;
+// ── Chat UI ──────────────────────────────────────
+let groupsCache = [];
 
 async function setupChatUI() {
   const name  = currentUser.displayName || currentUser.email;
@@ -881,335 +797,363 @@ async function setupChatUI() {
   document.getElementById('me-name').textContent  = name;
   document.getElementById('me-email').textContent = currentUser.email;
   const av = document.getElementById('me-avatar');
-  av.textContent = initials(name); av.style.background = color;
+  av.textContent=initials(name); av.style.background=color;
 
-  // Set online: true only once per session
-  if (!onlineStatusSet) {
-    onlineStatusSet = true;
-    await updateDoc(doc(db, 'users', currentUser.uid), { online: true });
-
-    // Set offline when tab closes or user navigates away
-    window.addEventListener('beforeunload', () => {
-      // Use sendBeacon for reliability on tab close
-      // Firestore doesn't support sendBeacon, so we use a sync-style update
-      updateDoc(doc(db, 'users', currentUser.uid), { online: false });
-    });
-
-    // Set offline when tab is hidden (phone locks, user switches tabs)
-    document.addEventListener('visibilitychange', () => {
-      if (!currentUser) return;
-      if (document.hidden) {
-        updateDoc(doc(db, 'users', currentUser.uid), { online: false });
-      } else {
-        updateDoc(doc(db, 'users', currentUser.uid), { online: true });
-      }
+  // set online once
+  if(!onlineStatusSet) {
+    onlineStatusSet=true;
+    await updateDoc(doc(db,'users',currentUser.uid),{online:true});
+    window.addEventListener('beforeunload', ()=> updateDoc(doc(db,'users',currentUser.uid),{online:false}));
+    document.addEventListener('visibilitychange', ()=> {
+      if(!currentUser) return;
+      updateDoc(doc(db,'users',currentUser.uid),{online: !document.hidden});
     });
   }
 
-  loadContacts();
+  // load recent chats to build recentUids
+  await loadRecentChats();
+  // real-time contacts listener
+  startContactsListener();
+  // load groups
+  await loadGroupsCache();
+  renderSidebar();
+
+  // enter key to send
+  document.getElementById('msg-input').addEventListener('keydown', e => {
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+  });
 }
 
-let contactsUnsubscribe = null;
-
-window.loadContacts = function() {
-  const list = document.getElementById('contact-list');
-  list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:0.82rem">Loading…</div>';
-
-  // Unsubscribe previous listener if any
-  if (contactsUnsubscribe) { contactsUnsubscribe(); contactsUnsubscribe = null; }
-
-  // Real-time listener — updates online/offline instantly
-  contactsUnsubscribe = onSnapshot(collection(db, 'users'), (snap) => {
-    list.innerHTML = '';
-    snap.forEach(d => {
-      if (d.id === currentUser.uid) return;
-      const u = d.data();
-      if (u.status !== 'approved') return;
-      if (u.role === 'admin') return;
-      const color = avatarColor(u.name);
-      const div = document.createElement('div');
-      div.className = 'contact-item';
-      div.dataset.uid = d.id;
-      div.dataset.name = u.name;
-      div.dataset.color = color;
-      div.innerHTML = `
-        <div class="avatar" style="background:${color};color:#fff">${initials(u.name)}</div>
-        <div class="contact-info">
-          <div class="contact-name">${esc(u.name)}</div>
-          <div class="contact-preview">${u.online ? '🟢 Online' : '⚪ Offline'}</div>
-        </div>`;
-      div.onclick = () => openChat(d.id, u.name, color);
-      // Re-apply active state if this contact is currently open
-      if (selectedContact && selectedContact.uid === d.id) div.classList.add('active');
-      list.appendChild(div);
-    });
-    if (!list.children.length)
-      list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:0.82rem">No approved contacts yet.</div>';
+async function loadRecentChats() {
+  recentUids = new Set();
+  // scan chats collection for chats involving currentUser
+  const snap = await getDocs(collection(db,'chats'));
+  snap.forEach(d => {
+    const parts = d.id.split('_');
+    if(parts.includes(currentUser.uid)) {
+      const other = parts.find(p=>p!==currentUser.uid);
+      if(other) recentUids.add(other);
+    }
   });
-};
+  // load group ids user participated in
+  const gSnap = await getDocs(collection(db,'groups'));
+  gSnap.forEach(d => {
+    const g = d.data();
+    if(g.members && g.members.includes(currentUser.uid)) recentUids.add('group_'+d.id);
+  });
+}
 
-function chatId(a, b) { return [a,b].sort().join('_'); }
+function startContactsListener() {
+  if(contactsUnsub) contactsUnsub();
+  contactsUnsub = onSnapshot(collection(db,'users'), snap => {
+    allUsersCache = [];
+    snap.forEach(d => {
+      if(d.id===currentUser.uid) return;
+      const u = d.data();
+      if(u.status!=='approved') return;
+      if(u.role==='admin') return;
+      allUsersCache.push({id:d.id, ...u});
+    });
+    renderSidebar(document.getElementById('search-input')?.value||'');
+  });
+}
 
-function openChat(uid, name, color) {
-  selectedContact = { uid, name, color };
-  document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
+async function loadGroupsCache() {
+  groupsCache = [];
+  const snap = await getDocs(collection(db,'groups'));
+  snap.forEach(d => { groupsCache.push({id:d.id, ...d.data()}); });
+}
+
+// ── Open DM chat ─────────────────────────────────
+function openChat(uid, name, color, isGroup) {
+  selectedContact = {uid, name, color, isGroup:false};
+
+  // mark as recent
+  recentUids.add(uid);
+
+  document.getElementById('no-chat').style.display='none';
+  const ac = document.getElementById('active-chat'); ac.style.display='flex';
+  const av = document.getElementById('chat-avatar');
+  av.textContent=initials(name); av.style.background=color; av.style.color='#fff';
+  document.getElementById('chat-name').textContent=name;
+  document.getElementById('chat-status').textContent='Online';
+  document.getElementById('chat-online-dot').style.display='block';
+  document.getElementById('msg-input').disabled=false;
+  document.getElementById('btn-send').disabled=false;
+  document.getElementById('messages-container').innerHTML='';
+
+  // update active highlight
+  document.querySelectorAll('.contact-item').forEach(el=>el.classList.remove('active'));
   document.querySelector(`.contact-item[data-uid="${uid}"]`)?.classList.add('active');
 
-  document.getElementById('no-chat').style.display = 'none';
-  const ac = document.getElementById('active-chat');
-  ac.style.display = 'flex';
-
-  const av = document.getElementById('chat-avatar');
-  av.textContent = initials(name); av.style.background = color; av.style.color = '#fff';
-  document.getElementById('chat-name').textContent = name;
-
-  document.getElementById('messages-container').innerHTML = '';
-  document.getElementById('msg-input').disabled = false;
-  document.getElementById('btn-send').disabled = false;
-
-  if (msgUnsubscribe) msgUnsubscribe();
+  if(msgUnsubscribe) msgUnsubscribe();
   const cid = chatId(currentUser.uid, uid);
   const q = query(collection(db,'chats',cid,'messages'), orderBy('timestamp','asc'), limit(100));
 
   msgUnsubscribe = onSnapshot(q, snap => {
     const container = document.getElementById('messages-container');
-    const wasAtBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 60;
-    const prevCount = container.querySelectorAll('.msg-row,.msg-system').length;
-
-    container.innerHTML = '';
-    snap.forEach(d => {
-      const m = d.data();
-      if (m.type === 'system') {
-        const el = document.createElement('div');
-        el.className = 'msg-system'; el.textContent = m.text;
-        container.appendChild(el);
-      } else {
-        const isMe = m.sender === currentUser.uid;
-        const row = document.createElement('div');
-        row.className = `msg-row ${isMe ? 'me' : 'other'}`;
-        row.innerHTML = `
-          ${!isMe ? `<div class="msg-sender">${esc(name)}</div>` : ''}
-          <div class="msg-bubble">${esc(m.text)}</div>
-          <div class="msg-time">${fmtTime(m.timestamp)}</div>`;
-        container.appendChild(row);
-      }
-    });
-
-    if (!container.children.length) {
-      container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">👋</div><div class="empty-state-text">Say hello to ${esc(name)}!</div></div>`;
-    }
-
-    const newCount = container.querySelectorAll('.msg-row,.msg-system').length;
-    if (wasAtBottom || newCount === prevCount) container.scrollTop = container.scrollHeight;
-
-    // notification if new message from other
-    if (newCount > prevCount && prevCount > 0) {
-      const last = snap.docs[snap.docs.length-1]?.data();
-      if (last && last.sender !== currentUser.uid) showNotif(`New message from ${name}`);
+    const wasAtBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 80;
+    const prevCount = container.children.length;
+    container.innerHTML='';
+    snap.forEach(d => renderMessage(d.data(), container, name));
+    if(!container.children.length) container.innerHTML=`<div class="empty-state"><div class="empty-state-icon">👋</div><div class="empty-state-text">Say hello to ${esc(name)}!</div></div>`;
+    const newCount = container.children.length;
+    if(wasAtBottom||newCount===prevCount) container.scrollTop=container.scrollHeight;
+    if(newCount>prevCount&&prevCount>0) {
+      const last=snap.docs[snap.docs.length-1]?.data();
+      if(last&&last.sender!==currentUser.uid) showNotif(`New message from ${name}`);
     }
   });
 }
 
-function showNotif(text) {
-  const b = document.getElementById('notif-banner');
-  document.getElementById('notif-text').textContent = text;
-  b.classList.add('show');
-  setTimeout(() => b.classList.remove('show'), 3000);
+// ── Open Group chat ──────────────────────────────
+function openGroupChat(groupId, groupName) {
+  selectedContact = {uid:groupId, name:groupName, isGroup:true};
+  recentUids.add('group_'+groupId);
+
+  document.getElementById('no-chat').style.display='none';
+  const ac = document.getElementById('active-chat'); ac.style.display='flex';
+  const av = document.getElementById('chat-avatar');
+  av.textContent='👥'; av.style.background='var(--accent2)'; av.style.color='#fff';
+  document.getElementById('chat-name').textContent=groupName;
+  document.getElementById('chat-status').textContent='Group Chat';
+  document.getElementById('chat-online-dot').style.display='none';
+  document.getElementById('msg-input').disabled=false;
+  document.getElementById('btn-send').disabled=false;
+  document.getElementById('messages-container').innerHTML='';
+
+  if(msgUnsubscribe) msgUnsubscribe();
+  const q = query(collection(db,'groups',groupId,'messages'), orderBy('timestamp','asc'), limit(100));
+  msgUnsubscribe = onSnapshot(q, snap => {
+    const container = document.getElementById('messages-container');
+    const wasAtBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 80;
+    container.innerHTML='';
+    snap.forEach(d => renderMessage(d.data(), container, d.data().senderName||'User'));
+    if(!container.children.length) container.innerHTML=`<div class="empty-state"><div class="empty-state-icon">👋</div><div class="empty-state-text">Start the conversation!</div></div>`;
+    if(wasAtBottom) container.scrollTop=container.scrollHeight;
+  });
 }
 
+// ── Render a single message ───────────────────────
+function renderMessage(m, container, fallbackName) {
+  if(m.type==='system') {
+    const el=document.createElement('div'); el.className='msg-system'; el.textContent=m.text;
+    container.appendChild(el); return;
+  }
+  const isMe = m.sender===currentUser.uid;
+  const row = document.createElement('div');
+  row.className=`msg-row ${isMe?'me':'other'}`;
+
+  let content='';
+  if(m.type==='file') {
+    if(m.fileType==='image') {
+      content=`<img class="msg-img" src="${m.fileUrl}" alt="${esc(m.fileName)}" onclick="openLightbox('${m.fileUrl}')"/>`;
+    } else if(m.fileType==='video') {
+      content=`<video class="msg-video" src="${m.fileUrl}" controls></video>`;
+    } else {
+      const icon = m.fileName?.endsWith('.pdf')?'📄':m.fileName?.endsWith('.zip')?'🗜️':'📎';
+      content=`<a class="msg-file-link" href="${m.fileUrl}" target="_blank" rel="noopener">${icon} ${esc(m.fileName||'File')}</a>`;
+    }
+  } else {
+    content=`<div class="msg-bubble">${esc(m.text)}</div>`;
+  }
+
+  row.innerHTML=`
+    ${!isMe?`<div class="msg-sender">${esc(m.senderName||fallbackName)}</div>`:''}
+    ${content}
+    <div class="msg-time">${fmtTime(m.timestamp)}</div>`;
+  container.appendChild(row);
+}
+
+// ── Send text message ────────────────────────────
 window.sendMessage = async function() {
   const input = document.getElementById('msg-input');
-  const text = input.value.trim();
-  if (!text || !selectedContact) return;
-  input.value = '';
+  const text  = input.value.trim();
+  if(!text||!selectedContact) return;
+  input.value='';
 
-  const cid = chatId(currentUser.uid, selectedContact.uid);
-  await setDoc(doc(db,'chats',cid), { participants: [currentUser.uid, selectedContact.uid] }, { merge: true });
-  await addDoc(collection(db,'chats',cid,'messages'), {
-    text, sender: currentUser.uid,
-    timestamp: serverTimestamp(), type: 'chat'
-  });
-  // also update global message count for admin
-  await addDoc(collection(db,'messages'), {
-    sender: currentUser.uid, recipient: selectedContact.uid,
-    text, timestamp: serverTimestamp()
-  });
+  if(selectedContact.isGroup) {
+    await addDoc(collection(db,'groups',selectedContact.uid,'messages'), {
+      type:'chat', text, sender:currentUser.uid,
+      senderName:currentUser.displayName||currentUser.email,
+      timestamp:serverTimestamp()
+    });
+  } else {
+    const cid = chatId(currentUser.uid, selectedContact.uid);
+    await setDoc(doc(db,'chats',cid),{participants:[currentUser.uid,selectedContact.uid]},{merge:true});
+    await addDoc(collection(db,'chats',cid,'messages'), {
+      type:'chat', text, sender:currentUser.uid, timestamp:serverTimestamp()
+    });
+    await addDoc(collection(db,'messages'),{sender:currentUser.uid,recipient:selectedContact.uid,text,timestamp:serverTimestamp()});
+  }
 };
 
-document.getElementById('msg-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendMessage(); }
-});
+// ── Send file / image / video ────────────────────
+window.sendFile = async function(input) {
+  const file = input.files[0];
+  if(!file||!selectedContact) return;
+  input.value='';
 
-// ── Admin ──────────────────────────────────────────────────
+  const isImage = file.type.startsWith('image/');
+  const isVideo = file.type.startsWith('video/');
+  const fileType = isImage?'image':isVideo?'video':'other';
+
+  const path = `chats/${Date.now()}_${file.name}`;
+  const storageRef = ref(storage, path);
+  const task = uploadBytesResumable(storageRef, file);
+
+  // show progress bar
+  const progEl   = document.getElementById('upload-progress');
+  const fillEl   = document.getElementById('upload-fill');
+  const pctEl    = document.getElementById('upload-pct');
+  const labelEl  = document.getElementById('upload-label');
+  progEl.style.display='flex';
+  labelEl.textContent=`Uploading ${file.name}…`;
+
+  task.on('state_changed',
+    snap => {
+      const pct = Math.round(snap.bytesTransferred/snap.totalBytes*100);
+      fillEl.style.width=pct+'%'; pctEl.textContent=pct+'%';
+    },
+    err => { progEl.style.display='none'; alert('Upload failed: '+err.message); },
+    async () => {
+      progEl.style.display='none';
+      const url = await getDownloadURL(task.snapshot.ref);
+      const msgData = { type:'file', fileUrl:url, fileName:file.name, fileType, sender:currentUser.uid, timestamp:serverTimestamp() };
+
+      if(selectedContact.isGroup) {
+        await addDoc(collection(db,'groups',selectedContact.uid,'messages'), {...msgData, senderName:currentUser.displayName||currentUser.email});
+      } else {
+        const cid = chatId(currentUser.uid, selectedContact.uid);
+        await setDoc(doc(db,'chats',cid),{participants:[currentUser.uid,selectedContact.uid]},{merge:true});
+        await addDoc(collection(db,'chats',cid,'messages'), msgData);
+      }
+    }
+  );
+};
+
+// ── Lightbox ─────────────────────────────────────
+window.openLightbox = function(url) {
+  document.getElementById('lightbox-img').src=url;
+  document.getElementById('lightbox').classList.add('show');
+};
+
+// ── Group modal ──────────────────────────────────
+window.showGroupModal = async function() {
+  const listEl = document.getElementById('group-member-list');
+  listEl.innerHTML='';
+  allUsersCache.forEach(u => {
+    const row = document.createElement('label');
+    row.className='member-row';
+    row.innerHTML=`
+      <input type="checkbox" value="${u.id}"/>
+      <div class="avatar" style="background:${avatarColor(u.name)};color:#fff;width:30px;height:30px;font-size:0.72rem">${initials(u.name)}</div>
+      <div style="font-size:0.88rem">${esc(u.name)}</div>`;
+    listEl.appendChild(row);
+  });
+  document.getElementById('group-modal').classList.add('show');
+};
+
+window.closeGroupModal = function() {
+  document.getElementById('group-modal').classList.remove('show');
+  document.getElementById('group-name-input').value='';
+};
+
+window.createGroup = async function() {
+  const name = document.getElementById('group-name-input').value.trim();
+  if(!name) return alert('Enter a group name!');
+  const checked = [...document.querySelectorAll('#group-member-list input:checked')].map(i=>i.value);
+  if(!checked.length) return alert('Select at least one member!');
+  const members = [...checked, currentUser.uid];
+  const ref2 = await addDoc(collection(db,'groups'),{name,members,createdBy:currentUser.uid,createdAt:serverTimestamp()});
+  recentUids.add('group_'+ref2.id);
+  groupsCache.push({id:ref2.id,name,members,createdBy:currentUser.uid});
+  closeGroupModal();
+  renderSidebar();
+  openGroupChat(ref2.id, name);
+  log(`Group created: ${name}`);
+};
+
+// ── Admin ────────────────────────────────────────
 window.loadAdminData = async function() {
   const tbody = document.getElementById('admin-user-table');
-  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Loading…</td></tr>';
-
-  const [userSnap, msgSnap] = await Promise.all([
-    getDocs(collection(db,'users')),
-    getDocs(collection(db,'messages'))
-  ]);
-
-  const users = userSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const pendingUsers  = users.filter(u => u.status === 'pending' && u.role !== 'admin');
-  const approvedUsers = users.filter(u => u.status === 'approved' && u.role !== 'admin');
-
-  document.getElementById('stat-users').textContent    = users.filter(u => u.role !== 'admin').length;
+  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Loading…</td></tr>';
+  const [userSnap,msgSnap] = await Promise.all([getDocs(collection(db,'users')), getDocs(collection(db,'messages'))]);
+  const users = userSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const pendingUsers = users.filter(u=>u.status==='pending'&&u.role!=='admin');
+  document.getElementById('stat-users').textContent    = users.filter(u=>u.role!=='admin').length;
   document.getElementById('stat-msgs').textContent     = msgSnap.size;
   document.getElementById('stat-sessions').textContent = users.filter(u=>u.online).length;
   document.getElementById('stat-pending').textContent  = pendingUsers.length;
 
-  // ── Pending Approvals section ────────────────────────────
-  const pendingSection = document.getElementById('pending-section');
-  const pendingCards   = document.getElementById('pending-cards');
-  const pendingBadge   = document.getElementById('pending-badge');
-
-  if (pendingUsers.length > 0) {
-    pendingSection.style.display = 'block';
-    pendingBadge.textContent = `${pendingUsers.length} waiting`;
-    pendingCards.innerHTML = '';
-
-    pendingUsers.forEach(u => {
-      const color  = avatarColor(u.name);
-      const joined = u.createdAt ? u.createdAt.toDate().toLocaleDateString() : '—';
-      const card   = document.createElement('div');
-      card.style.cssText = `
-        display:flex; align-items:center; gap:14px;
-        background:var(--surface); border:1px solid rgba(245,158,11,0.2);
-        border-radius:12px; padding:14px 18px;
-        transition: border-color 0.2s;
-      `;
-      card.innerHTML = `
-        <div class="avatar" style="background:${color};color:#fff;width:42px;height:42px;font-size:0.9rem;flex-shrink:0">
-          ${initials(u.name)}
-        </div>
+  const pendSec   = document.getElementById('pending-section');
+  const pendCards = document.getElementById('pending-cards');
+  const pendBadge = document.getElementById('pending-badge');
+  if(pendingUsers.length>0) {
+    pendSec.style.display='block';
+    pendBadge.textContent=`${pendingUsers.length} waiting`;
+    pendCards.innerHTML='';
+    pendingUsers.forEach(u=>{
+      const color=avatarColor(u.name);
+      const joined=u.createdAt?u.createdAt.toDate().toLocaleDateString():'—';
+      const card=document.createElement('div');
+      card.style.cssText='display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:14px 18px;';
+      card.innerHTML=`
+        <div class="avatar" style="background:${color};color:#fff;width:42px;height:42px;font-size:0.9rem;flex-shrink:0">${initials(u.name)}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-weight:600;font-size:0.92rem;color:var(--text)">${esc(u.name)}</div>
+          <div style="font-weight:600;font-size:0.92rem">${esc(u.name)}</div>
           <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">${esc(u.email)}</div>
           <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Registered ${joined}</div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0">
-          <button
-            onclick="window.approveUser('${u.id}','${esc(u.name)}')"
-            style="padding:8px 18px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);
-                   border-radius:8px;color:#86efac;font-size:0.82rem;font-weight:700;cursor:pointer;
-                   transition:all 0.2s;font-family:var(--font-body)"
-            onmouseover="this.style.background='rgba(34,197,94,0.28)'"
-            onmouseout="this.style.background='rgba(34,197,94,0.15)'">
-            ✅ Approve
-          </button>
-          <button
-            onclick="window.rejectUser('${u.id}','${esc(u.name)}')"
-            style="padding:8px 18px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);
-                   border-radius:8px;color:#fca5a5;font-size:0.82rem;font-weight:700;cursor:pointer;
-                   transition:all 0.2s;font-family:var(--font-body)"
-            onmouseover="this.style.background='rgba(239,68,68,0.22)'"
-            onmouseout="this.style.background='rgba(239,68,68,0.1)'">
-            ❌ Reject
-          </button>
+          <button onclick="window.approveUser('${u.id}','${esc(u.name)}')" style="padding:8px 18px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;color:#86efac;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:var(--font-body)">✅ Approve</button>
+          <button onclick="window.rejectUser('${u.id}','${esc(u.name)}')" style="padding:8px 18px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);border-radius:8px;color:#fca5a5;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:var(--font-body)">❌ Reject</button>
         </div>`;
-      pendingCards.appendChild(card);
+      pendCards.appendChild(card);
     });
-  } else {
-    pendingSection.style.display = 'none';
-  }
+  } else { pendSec.style.display='none'; }
 
-  // ── User Management table ────────────────────────────────
-  tbody.innerHTML = '';
-
-  // Sort: pending first, then approved, then rejected — skip admin
-  users
-    .filter(u => u.role !== 'admin')
-    .sort((a,b) => {
-      const order = { pending: 0, approved: 1, rejected: 2 };
-      return (order[a.status]??1) - (order[b.status]??1);
-    })
-    .forEach(u => {
-      const uid = u.id;
-      const color   = avatarColor(u.name);
-      const joined  = u.createdAt ? u.createdAt.toDate().toLocaleDateString() : '—';
-      const status  = u.status || 'pending';
-
-      const approvalPill = status === 'approved'
-        ? `<span class="status-pill online">✅ Approved</span>`
-        : status === 'rejected'
-        ? `<span class="status-pill" style="background:rgba(239,68,68,0.15);color:#fca5a5">❌ Rejected</span>`
-        : `<span class="status-pill" style="background:rgba(245,158,11,0.15);color:#fcd34d">⏳ Pending</span>`;
-
-      const actionBtns = `
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${status !== 'approved'
-            ? `<button class="btn-small btn-success" onclick="window.approveUser('${uid}','${esc(u.name)}')">✅ Approve</button>`
-            : `<button class="btn-small" style="border-color:var(--border);color:var(--muted);cursor:default" disabled>Approved</button>`
-          }
-          ${status !== 'rejected'
-            ? `<button class="btn-small btn-danger" onclick="window.rejectUser('${uid}','${esc(u.name)}')">❌ Reject</button>`
-            : ''
-          }
-          <button class="btn-small btn-danger" onclick="window.deleteUser('${uid}','${esc(u.name)}')" style="opacity:0.7" title="Delete user">🗑</button>
-        </div>`;
-
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
-          <div class="avatar" style="background:${color};color:#fff;width:30px;height:30px;font-size:0.72rem;">${initials(u.name)}</div>
-          <span>${esc(u.name)}</span>
-        </td>
-        <td style="color:var(--muted)">${esc(u.email)}</td>
-        <td><span class="status-pill offline">user</span></td>
-        <td>${approvalPill}</td>
-        <td><span class="status-pill ${u.online?'online':'offline'}">${u.online?'Online':'Offline'}</span></td>
-        <td style="color:var(--muted)">${joined}</td>
-        <td>${actionBtns}</td>`;
-      tbody.appendChild(row);
-    });
-
-  if (!tbody.children.length)
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No users found.</td></tr>';
+  tbody.innerHTML='';
+  users.filter(u=>u.role!=='admin').sort((a,b)=>({pending:0,approved:1,rejected:2}[a.status]??1)-({pending:0,approved:1,rejected:2}[b.status]??1))
+  .forEach(u=>{
+    const color=avatarColor(u.name);
+    const joined=u.createdAt?u.createdAt.toDate().toLocaleDateString():'—';
+    const status=u.status||'pending';
+    const pill=status==='approved'?`<span class="status-pill online">✅ Approved</span>`:status==='rejected'?`<span class="status-pill" style="background:rgba(239,68,68,0.15);color:#fca5a5">❌ Rejected</span>`:`<span class="status-pill" style="background:rgba(245,158,11,0.15);color:#fcd34d">⏳ Pending</span>`;
+    const actions=`<div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${status!=='approved'?`<button class="btn-small btn-success" onclick="window.approveUser('${u.id}','${esc(u.name)}')">✅</button>`:`<button class="btn-small" style="border-color:var(--border);color:var(--muted);cursor:default" disabled>✓</button>`}
+      ${status!=='rejected'?`<button class="btn-small btn-danger" onclick="window.rejectUser('${u.id}','${esc(u.name)}')">❌</button>`:''}
+      <button class="btn-small btn-danger" onclick="window.deleteUser('${u.id}','${esc(u.name)}')" style="opacity:.7">🗑</button>
+    </div>`;
+    const row=document.createElement('tr');
+    row.innerHTML=`
+      <td style="display:flex;align-items:center;gap:10px;padding:10px 14px"><div class="avatar" style="background:${color};color:#fff;width:28px;height:28px;font-size:0.7rem">${initials(u.name)}</div><span>${esc(u.name)}</span></td>
+      <td style="color:var(--muted)">${esc(u.email)}</td>
+      <td><span class="status-pill offline">user</span></td>
+      <td>${pill}</td>
+      <td><span class="status-pill ${u.online?'online':'offline'}">${u.online?'Online':'Offline'}</span></td>
+      <td style="color:var(--muted)">${joined}</td>
+      <td>${actions}</td>`;
+    tbody.appendChild(row);
+  });
+  if(!tbody.children.length) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No users found.</td></tr>';
 };
 
-window.deleteUser = async function(uid, name) {
-  if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
-  await deleteDoc(doc(db,'users', uid));
-  log(`Admin deleted user: ${name}`);
-  loadAdminData();
-};
-
-window.approveUser = async function(uid, name) {
-  await updateDoc(doc(db,'users', uid), { status: 'approved' });
-  log(`Admin approved user: ${name}`);
-  loadAdminData();
-};
-
-window.rejectUser = async function(uid, name) {
-  if (!confirm(`Reject "${name}"? They will be signed out and blocked.`)) return;
-  await updateDoc(doc(db,'users', uid), { status: 'rejected', online: false });
-  log(`Admin rejected user: ${name}`);
-  loadAdminData();
-};
+window.approveUser = async function(uid,name) { await updateDoc(doc(db,'users',uid),{status:'approved'}); log(`Approved: ${name}`); loadAdminData(); };
+window.rejectUser  = async function(uid,name) { if(!confirm(`Reject "${name}"?`)) return; await updateDoc(doc(db,'users',uid),{status:'rejected',online:false}); log(`Rejected: ${name}`); loadAdminData(); };
+window.deleteUser  = async function(uid,name) { if(!confirm(`Delete "${name}"?`)) return; await deleteDoc(doc(db,'users',uid)); log(`Deleted: ${name}`); loadAdminData(); };
 
 window.updatePerf = function() {
-  const metrics = [
-    { bar:'bar-uptime',     val:'val-uptime',     min:97, max:100, suffix:'%', color:'var(--success)' },
-    { bar:'bar-throughput', val:'val-throughput',  min:50, max:95,  suffix:'%', color:'var(--accent)' },
-    { bar:'bar-db',         val:'val-db',          min:30, max:70,  suffix:'%', color:'var(--accent3)' },
-    { bar:'bar-mem',        val:'val-mem',         min:40, max:75,  suffix:'%', color:'var(--accent2)' },
-  ];
-  metrics.forEach(m => {
-    const v = Math.round(m.min + Math.random() * (m.max - m.min));
-    const bar = document.getElementById(m.bar);
-    const val = document.getElementById(m.val);
-    if (bar) { bar.style.width = v+'%'; bar.style.background = m.color; }
-    if (val) val.textContent = v + m.suffix;
-  });
-  log('System performance metrics refreshed');
+  [{bar:'bar-uptime',val:'val-uptime',min:97,max:100,color:'var(--success)'},{bar:'bar-throughput',val:'val-throughput',min:50,max:95,color:'var(--accent)'},{bar:'bar-db',val:'val-db',min:30,max:70,color:'var(--accent3)'},{bar:'bar-mem',val:'val-mem',min:40,max:75,color:'var(--accent2)'}]
+  .forEach(m=>{ const v=Math.round(m.min+Math.random()*(m.max-m.min)); const b=document.getElementById(m.bar); const vl=document.getElementById(m.val); if(b){b.style.width=v+'%';b.style.background=m.color;} if(vl)vl.textContent=v+'%'; });
+  log('Performance metrics refreshed');
 };
 
-// preload some activity
-log('NexChat Admin Panel initialized');
-log('Firebase connection established');
-log('Firestore real-time listener active');
+// ── mobile sidebar helpers ───────────────────────
+window.showSidebar = function() { document.getElementById('sidebar').classList.add('open'); document.getElementById('active-chat').style.display='none'; document.getElementById('no-chat').style.display='flex'; };
 
+// preload logs
+log('NexChat initialized'); log('Firebase connected'); log('Firestore listener active');
 </script>
 </body>
 </html>
